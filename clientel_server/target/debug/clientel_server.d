@@ -1,0 +1,1 @@
+C:\Users\Silver\ Luhtoja\Desktop\UDP_server\clientel_server\target\debug\clientel_server.exe: C:\Users\Silver\ Luhtoja\Desktop\UDP_server\clientel_server\src\lib.rs C:\Users\Silver\ Luhtoja\Desktop\UDP_server\clientel_server\src\main.rs
