@@ -8,4 +8,3 @@ edition = "2021"
 [dependencies]
 r = { package = "rand", version = "0.8" }
 macroquad = "0.3.24"
-mazegen = { path = "../maze_generator" }
