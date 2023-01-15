@@ -4,6 +4,7 @@ PLANS TODAY:
 1. Get Maze Working   --> Seperate maze,map.rs to seperate library and import in
 2. Get player moving on map  --> Needs refactoring
 3. Figure out what should happend when player first connects 
+    1. Coal for now is to show connected player on same screen and display his movement
 ```
     Thought: 
     HostServer functionality (seperate library)
