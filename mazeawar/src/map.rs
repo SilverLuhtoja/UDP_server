@@ -1,4 +1,4 @@
-use macroquad::color::{BLACK, RED, WHITE};
+use macroquad::color::{BLACK, WHITE};
 use macroquad::shapes::draw_rectangle;
 
 pub const FLOOR: i32 = 0;

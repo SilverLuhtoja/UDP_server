@@ -1,4 +1,3 @@
-use std::thread::current;
 use r::{Rng, thread_rng};
 use macroquad::prelude::*;
 use crate::map::{Map, WALL};
