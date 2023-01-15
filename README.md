@@ -1,7 +1,7 @@
 # UDP_server
 
 PLANS TODAY:
-1. Get Maze Working
+1. Get Maze Working   --> Seperate maze,map.rs to seperate library and import in
 2. Get player moving on map
 3. Figure out what should happend when player first connects 
 ```
