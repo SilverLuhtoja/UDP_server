@@ -19,3 +19,9 @@ PLANS TODAY:
 ```    
 4. Figure out and write down what is saving/sending what.
 5. Try to setup the overtaking logic, if host leaves the client2 will take over and game will not crash (probably not crashing anyway (UDP thing))
+
+
+# MAZEWARS
+
+* MazeGenerator (Valeria)
+
