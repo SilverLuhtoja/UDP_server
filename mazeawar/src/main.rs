@@ -1,5 +1,6 @@
-use crate::maze::{Grid, HIGH, LOW, MEDIUM};
 use macroquad::prelude::*;
+use std::process::exit;
+use crate::maze::{Grid, HIGH, LOW, MEDIUM};
 use crate::map::WALL;
 use crate::player::*;
 
@@ -25,16 +26,13 @@ async fn main() {
     grid.generate_maze();
     let map = grid.convert_to_map();
     loop {
-        //
         map.draw();
         grid.draw();
 
-        // Player::draw();
         player.draw();
-
-
-
-
+        player.update_movement();
+        
+        if is_key_pressed(KeyCode::Escape) { exit(1) }
         next_frame().await
     }
 }
