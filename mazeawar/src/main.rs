@@ -2,9 +2,6 @@ use crate::maze::{Grid, HIGH, LOW, MEDIUM};
 use macroquad::prelude::*;
 use crate::map::WALL;
 
-use maze_gen::{};
-
-
 
 fn window_conf() -> Conf {
     Conf {
