@@ -1,8 +1,9 @@
 use macroquad::prelude::*;
+use std::collections::HashMap;
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+// pub fn add(left: usize, right: usize) -> usize {
+//     left + right
+// }
 
 const CAP_SIZE: f32 = 1.0;
 const PADDING: f32 = 20.0;
@@ -84,9 +85,9 @@ fn get_center_y(lines: f32, cube_size: f32) -> f32 {
 }
 
 fn get_cube_size(horizontal_cubes: f32) -> f32 {
-    if horizontal_cubes <= 10.0 {return 20.0} 
-    if horizontal_cubes <= 20.0 {return 10.0} 
-    if horizontal_cubes <= 30.0 {return 5.0} 
+    if horizontal_cubes <= 10.0 {return 30.0} 
+    if horizontal_cubes <= 20.0 {return 20.0} 
+    if horizontal_cubes <= 30.0 {return 10.0} 
     return 10.0
 }
 
@@ -121,15 +122,17 @@ pub struct ScoreBoard {
     pub height: f32,
     pub text_address_x: f32,
     pub text_address_y: f32,
+    pub players: HashMap<String, String>,
 }
 
-impl ScoreBoard {
-    pub fn new(visual_box: MazeVisual) -> Self {
+impl ScoreBoard{
+    pub fn new(visual_box: MazeVisual, players: HashMap<String, String>) -> Self {
         Self {
             width: screen_width() / 2.0 - PADDING * 5.0 ,
             height: screen_height() - PADDING * 3.0 - visual_box.height,
             text_address_x: screen_width() / 2.0,
             text_address_y: PADDING * 3.0 + visual_box.height,
+            players
         }
     }
     pub fn draw(&self) {
@@ -139,8 +142,19 @@ impl ScoreBoard {
             screen_height() - self.height - PADDING,
             self.width,
             self.height,
-            YELLOW,
+            GRAY,
         );
+
+
+        let mut y_addition = 0.0;
+
+        let mut hash_vec: Vec<(&String, &String)> = self.players.iter().collect();
+        hash_vec.sort_by(|a, b| b.1.cmp(a.1));
+        for (player, score) in hash_vec.iter() {
+            draw_text(&player.clone(), self.text_address_x + 90.0, self.text_address_y + y_addition, 20.0, BLACK);
+            draw_text(score, self.text_address_x + 200.0, self.text_address_y + y_addition, 20.0, BLACK);
+            y_addition += 20.0;
+        }
     }
 }
 

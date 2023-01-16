@@ -3,6 +3,8 @@ use std::net::UdpSocket;
 use std::str;
 use macroquad::prelude::*;
 use clientel_server::*;
+use std::collections::HashMap;
+
 
 const ADDR:&str = "127.0.0.1";
 const SERVER_PORT:u16 = 4242;
@@ -34,12 +36,20 @@ async fn main() -> std::io::Result<()> {
         vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
         vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ];
+
+    let mut players = HashMap::new();
+    players.insert(String::from("Anna"), String::from("30"));
+    players.insert(String::from("Silver"), String::from("20"));
+    players.insert(String::from("Valeria"), String::from("10"));
+    players.insert(String::from("Emil"), String::from("05"));
+
+
     loop{
         clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
 
         let game_board = GameBoard::new(map.clone());
         let visual_board = MazeVisual::new(game_board.clone());
-        let score_board = ScoreBoard::new(visual_board.clone());
+        let score_board = ScoreBoard::new(visual_board.clone(), players.clone());
         game_board.draw();
         visual_board.draw();
         score_board.draw();
