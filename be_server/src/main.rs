@@ -9,6 +9,13 @@ fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind(format!("{}:{}",ADDR, PORT))?; 
     let mut buf = [0; 2048];
 
+    //TODO
+    //1. create new maze
+    //2. position clients with random positions
+
+
+
+
     println!("Creating server : {:?}.Listening....", socket);
     println!("Waiting messages:");
     loop {
@@ -17,15 +24,22 @@ fn main() -> std::io::Result<()> {
         let (amt, src) = socket.recv_from(&mut buf).expect("incoming message failed");
         let incoming_message = String::from_utf8_lossy(&mut buf[..amt]);
         println!("client <{}>: {:?}", src, incoming_message);
+
+        //TODO
+        //if client is connected, then send the map and positions 
         
         if incoming_message == "connect" {
             let message  = format!("Successful connection with {}:{}",ADDR,PORT);
             socket.send_to(message.as_bytes(), &src)?;
-        }else{
+        }else if incoming_message == "stop"{
+            println!("CLIENT LEAVING");
+        }else {
             // Redeclare `buf` as slice of the received data
             // and send data back to origin.
             let buf = &mut buf[..amt];
             socket.send_to(&buf, &src)?;
+
         }
     }
 }
+
