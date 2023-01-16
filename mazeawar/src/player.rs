@@ -1,7 +1,8 @@
 use macroquad::prelude::*;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 
-
-#[derive(Clone,Copy, Debug, PartialEq)]
+#[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum  Direction {
     UP,
     DOWN,
@@ -9,13 +10,13 @@ pub enum  Direction {
     RIGHT
 }
 
-#[derive(Clone,Copy, Debug, PartialEq)]
+#[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Point{
     pub x: f32,
     pub y: f32
 }
 
-#[derive(Clone,Copy, Debug, PartialEq)]
+#[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Player{
     pub location: Point,
     pub looking_at:  Direction
@@ -85,6 +86,9 @@ impl Player {
 
 
 
+    pub fn set_postion(&mut self, point: Point){
+        self.location = point;
+    }
     pub fn get_center_x(&self) -> f32{
         self.location.x + BOX_SIZE/2.0
     }
