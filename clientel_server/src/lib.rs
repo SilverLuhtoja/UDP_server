@@ -7,7 +7,8 @@ use std::collections::HashMap;
 
 const CAP_SIZE: f32 = 1.0;
 const PADDING: f32 = 20.0;
-
+const PLAYER_SIZE:f32 = 10.0;
+const PLAYER_RAY_LENGTH:f32 = PLAYER_SIZE * 2.0;
 
 #[derive(Debug, Clone)]
 pub struct GameBoard {
@@ -21,6 +22,34 @@ pub struct Settings {
     pub center_y_offset: f32,
     pub cube_size: f32,
     pub board_height: f32,
+}
+
+pub struct Player {
+    pub x: f32,
+    pub y: f32,
+    pub angle: f32,
+    pub speed: f32,
+}
+
+impl Player {
+    pub fn new(x:f32, y:f32, angle:f32, speed:f32) -> Player {
+        Self {x, y, angle, speed}    
+    }
+    pub fn draw(&self) {
+        // player.x = (j as f32 * self.setup.cube_size) + PADDING;
+        // player.y = (i as f32 * self.setup.cube_size) + self.setup.center_y_offset*2.0 - PADDING;
+        
+        //draw player on the screen
+        draw_circle(self.x, self.y, PLAYER_SIZE/2.0, RED);
+        
+        //Draw a line from player to show it`s direction
+        draw_line(self.x, self.y, self.x + self.angle.cos() * PLAYER_RAY_LENGTH, self.y + self.angle.sin() * PLAYER_RAY_LENGTH, 1.0, RED);
+        
+        //Draw rays from player
+        // for ray in rays.iter() {
+        //     draw_line(player.x, player.y + PLAYER_SIZE/2.0, (player.x + ray.angle.cos() * ray.distance), (player.y + ray.angle.sin() * ray.distance)+ PLAYER_SIZE/2.0, 1.0, YELLOW);
+        // }
+    }
 }
 
 impl Settings{
@@ -49,20 +78,25 @@ impl GameBoard {
     pub fn draw(&self) {
         draw_rectangle(
             20.0,
-            self.setup.center_y_offset + self.setup.center_y_offset - CAP_SIZE - 20.0,
+            self.setup.center_y_offset + self.setup.center_y_offset - CAP_SIZE - PADDING,
             (self.board[0].len() as f32 * self.setup.cube_size) + CAP_SIZE,
             (self.board.len() as f32 * self.setup.cube_size) + CAP_SIZE,
             WHITE,
         );
         for i in 0..self.board.len() {
             for j in 0..self.board[0].len() {
-                draw_rectangle(
-                    (j as f32 * self.setup.cube_size) + 20.0,
-                    (i as f32 * self.setup.cube_size) + self.setup.center_y_offset + self.setup.center_y_offset - 20.0,
-                    self.setup.cube_size - CAP_SIZE,
-                    self.setup.cube_size - CAP_SIZE,
-                    self.match_color(self.board[i][j]),
-                );
+                match self.board[i][j] {
+                    1 => {
+                        draw_rectangle(
+                            (j as f32 * self.setup.cube_size) + PADDING,
+                            (i as f32 * self.setup.cube_size) + self.setup.center_y_offset*2.0 - PADDING,
+                            self.setup.cube_size - CAP_SIZE,
+                            self.setup.cube_size - CAP_SIZE,
+                            self.match_color(self.board[i][j]),
+                        );
+                    },
+                    _=> (),
+                }
             }
         }
     }
@@ -71,7 +105,7 @@ impl GameBoard {
         match ch {
             1  => GRAY,
             0  => WHITE,
-            _ => RED,
+            _ => GREEN,
         }
     }
 }

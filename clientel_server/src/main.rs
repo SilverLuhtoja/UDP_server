@@ -4,6 +4,7 @@ use std::str;
 use macroquad::prelude::*;
 use clientel_server::*;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 
 
 const ADDR:&str = "127.0.0.1";
@@ -22,6 +23,7 @@ fn window_conf() -> Conf {
     }
 }
 
+
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind(format!("{}:{}",ADDR, CLIENT_PORT))?;
@@ -29,13 +31,15 @@ async fn main() -> std::io::Result<()> {
     try_to_connect(&socket); // "fake handshake"
     let map: Vec<Vec<i32>> = vec![
         vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        vec![1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         vec![1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
         vec![1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
+        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1],
         vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ];
+
+    let mut player = Player::new(45.0, 665.0, 0.0, 0.0);
 
     let mut players = HashMap::new();
     players.insert(String::from("Anna"), String::from("30"));
@@ -43,35 +47,38 @@ async fn main() -> std::io::Result<()> {
     players.insert(String::from("Valeria"), String::from("10"));
     players.insert(String::from("Emil"), String::from("05"));
 
+    
 
     loop{
         clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
 
-        let game_board = GameBoard::new(map.clone());
-        let visual_board = MazeVisual::new(game_board.clone());
-        let score_board = ScoreBoard::new(visual_board.clone(), players.clone());
-        game_board.draw();
-        visual_board.draw();
-        score_board.draw();
+        // player.speed = 0.0;
+
         
 
-        if is_key_pressed(KeyCode::Left) {
+        if is_key_down(KeyCode::Left) {
             println!("\nwrite to server:");
+            player.angle -= toRadians(1.0);
             socket.send("Left".as_bytes()).expect("Error on send");
         }
 
-        if is_key_pressed(KeyCode::Right) {
+        if is_key_down(KeyCode::Right) {
             println!("\nwrite to server:");
+            player.angle += toRadians(1.0);
             socket.send("Right".as_bytes()).expect("Error on send");
         }
 
-        if is_key_pressed(KeyCode::Up) {
+        if is_key_down(KeyCode::Up) {
             println!("\nwrite to server:");
+            player.speed = 0.5;
+            movePlayer(&mut player);
             socket.send("Up".as_bytes()).expect("Error on send");
         }
 
-        if is_key_pressed(KeyCode::Down) {
+        if is_key_down(KeyCode::Down) {
             println!("\nwrite to server:");
+            player.speed = -0.5;
+            movePlayer(&mut player);
             socket.send("Down".as_bytes()).expect("Error on send");
         }
 
@@ -90,6 +97,14 @@ async fn main() -> std::io::Result<()> {
         //     socket.send(line.as_bytes()).expect("Error on send");
         //     read_incoming_messages(&socket);
         // }
+
+        let game_board = GameBoard::new(map.clone());
+        let visual_board = MazeVisual::new(game_board.clone());
+        let score_board = ScoreBoard::new(visual_board.clone(), players.clone());
+        game_board.draw();
+        visual_board.draw();
+        score_board.draw();
+        player.draw();
 
         next_frame().await
     }
@@ -119,12 +134,10 @@ fn read_incoming_messages(socket :&UdpSocket) {
     }
 }
 
-
-
-// fn draw_the_score(){
-//     draw_text("SCORE:", 620.0, 700.0, 20.0, WHITE);
-//     draw_line(700.0, 620.0, 1180.0, 620.0, 1.0, RED); //top
-//     draw_line(700.0, 780.0, 1180.0, 780.0, 1.0, RED); //bottom
-//     draw_line(700.0, 620.0, 700.0, 780.0, 1.0, RED); //left
-//     draw_line(1180.0, 620.0, 1180.0, 780.0, 1.0, RED); //right
-// }
+fn toRadians(deg: f32) -> f32 {
+    (deg * PI as f32) / 180.0
+}
+fn movePlayer(player: &mut Player) {
+    player.x += player.angle.cos() * player.speed;
+    player.y += player.angle.sin() * player.speed;
+}
