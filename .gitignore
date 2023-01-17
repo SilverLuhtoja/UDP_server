@@ -2,3 +2,5 @@
 */Cargo.lock
 clientel_server/target
 /Cargo.lock
+.idea
+*.iml
