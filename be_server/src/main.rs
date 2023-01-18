@@ -1,6 +1,10 @@
+mod map;
+mod maze;
+
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::net::UdpSocket;
+use crate::{maze::{Grid, LOW}, map::Map};
 
 const ADDR: &str = "127.0.0.1";
 const PORT: u16 = 4242;
@@ -18,10 +22,11 @@ pub struct Data<T> {
 }
 
 fn main() -> std::io::Result<()> {
-    // for UDP4
-    // let socket = UdpSocket::bind("[::]:2000")?;  // for UDP4/6
     let socket = UdpSocket::bind(format!("{}:{}", ADDR, PORT))?;
-    let mut buf = [0; 2048];
+    let mut buf = [0; 24000];
+    let mut grid = Grid::new(10, 10, LOW);
+    grid.generate_maze();
+    let map = grid.convert_to_map();
     println!("Creating server : {:?}.Listening....", socket);
     println!("Waiting messages:");
 
@@ -47,10 +52,14 @@ fn main() -> std::io::Result<()> {
         if incoming_message == "connect" {
             // let message  = format!("Successful connection with {}:{}",ADDR,PORT);
             // socket.send(message.as_bytes());
+            let message = json!({
+                "map" : map,
+                "player" : player
+            });
             socket
                 .connect(&src)
                 .expect("SERVER: connect function failed");
-            socket.send(json!(&player).to_string().as_bytes())?;
+            socket.send(json!(&message).to_string().as_bytes())?;
             flag = true
             // socket.send_to(message.as_bytes(), &src)?;
         }

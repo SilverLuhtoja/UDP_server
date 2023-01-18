@@ -1,5 +1,5 @@
 use local_ip_address::local_ip;
-use std::{net::{SocketAddr, UdpSocket, IpAddr}, io};
+use std::net::{SocketAddr, UdpSocket, IpAddr};
 
 use crate::player::Player;
 
@@ -9,19 +9,25 @@ const PORT: u16 = 34254;
 // needs mutable hashmap for IP => {PlayerData}
 
 #[derive(Debug)]
-pub struct Client {
+pub struct Server {
     pub socket: UdpSocket,
+    pub clients: Vec<SocketAddr>,
+    pub clients_data: Vec<Player>
 }
 
 
-impl Client {
+impl Server {
     pub fn new(IP: IpAddr) -> Self {
         Self {
             socket: UdpSocket::bind(format!("{}:{}", IP, PORT)).unwrap(),
+            clients: vec![],
+            clients_data : vec![]
         }
     }
 
- 
+    pub fn add_player(&mut self, player: Player){
+        self.clients_data.push(player)
+    }
     pub fn listen_events() {}
 
     pub fn broadcast_to_players() {}
