@@ -18,8 +18,6 @@ pub struct Data<T> {
 }
 
 fn main() -> std::io::Result<()> {
-    // for UDP4
-    // let socket = UdpSocket::bind("[::]:2000")?;  // for UDP4/6
     let socket = UdpSocket::bind(format!("{}:{}", ADDR, PORT))?;
     let mut buf = [0; 2048];
     println!("Creating server : {:?}.Listening....", socket);

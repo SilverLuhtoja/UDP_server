@@ -82,10 +82,6 @@ impl Player {
         }
     }
 
-
-
-
-
     pub fn set_postion(&mut self, point: Point){
         self.location = point;
     }
