@@ -11,15 +11,9 @@ pub struct Point {
     pub y: f32,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct Data<T> {
-    pub messsage_type: String,
-    pub data: Option<T>,
-}
-
 fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind(format!("{}:{}", ADDR, PORT))?;
-    let mut buf = [0; 2048];
+    let mut buf = [0; 24000];
     println!("Creating server : {:?}.Listening....", socket);
     println!("Waiting messages:");
 
@@ -27,7 +21,6 @@ fn main() -> std::io::Result<()> {
     let mut flag = false;
     loop {
         println!();
-        // (bite_slice, address where it came from)
         let (amt, src) = socket.recv_from(&mut buf).expect("incoming message failed");
         let incoming_message = String::from_utf8_lossy(&mut buf[..amt]);
         println!("client <{}>: {:?}", src, incoming_message);
@@ -43,14 +36,11 @@ fn main() -> std::io::Result<()> {
         }
 
         if incoming_message == "connect" {
-            // let message  = format!("Successful connection with {}:{}",ADDR,PORT);
-            // socket.send(message.as_bytes());
             socket
                 .connect(&src)
                 .expect("SERVER: connect function failed");
             socket.send(json!(&player).to_string().as_bytes())?;
             flag = true
-            // socket.send_to(message.as_bytes(), &src)?;
         }
     }
 }
