@@ -7,7 +7,7 @@ use serde_json::json;
 use std::net::UdpSocket;
 use std::process::exit;
 
-mod host_server;
+mod client_server;
 mod map;
 mod maze;
 mod player;

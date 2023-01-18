@@ -1,42 +1,43 @@
-use std::io::{self, BufRead};
-use std::net::UdpSocket;
-use std::str;
+use local_ip_address::local_ip;
+use std::net::{SocketAddr, UdpSocket, IpAddr};
 
-const ADDR:&str = "127.0.0.1";
-const SERVER_PORT:u16 = 4242;
-const CLIENT_PORT:u16 = 34254;
+use crate::player::Player;
 
-fn main() -> std::io::Result<()> {
-    let socket = UdpSocket::bind(format!("{}:{}",ADDR, CLIENT_PORT))?;
-    println!("Establishing UDP socket address at : {:?}", socket);
-    try_to_connect(&socket); // "fake handshake"
+// const ADDR: &str = "127.0.0.1";
+const PORT: u16 = 34254;
 
-    // println!("\nwrite to server:");
-    // let stdin = io::stdin();
-    // for line in stdin.lock().lines() {
-    //     let line = line.unwrap();
-    //     if &line == "BYE" {
-    //         break;
-    //     }
-    //     socket.send(line.as_bytes()).expect("Error on send");
-    //     read_incoming_messages(&socket);
-    // }
-    Ok(())
+// needs mutable hashmap for IP => {PlayerData}
+
+#[derive(Debug)]
+pub struct Host {
+    pub socket: UdpSocket,
+    pub clients: Vec<SocketAddr>,
+    pub clients_data: Vec<Player>
 }
 
-// this is basically UDP handshake, to see if anything is even otherside to receive messages
-fn try_to_connect(socket : &UdpSocket){
-    let addr = &format!("{}:{}",ADDR, SERVER_PORT);
-    socket.connect(addr).expect("connect function failed");
-    // socket.send_to("connect".as_bytes(),&addr).unwrap();
-    socket.send("connect".as_bytes()).expect("message sending failed"); // when connected, can just send not send_to
-    read_incoming_messages(socket);
-}
- 
-fn read_incoming_messages(socket :&UdpSocket) {
-    let mut buf = [0; 2048];
-	let (amt, _src) = socket.recv_from(&mut buf).expect("incoming message failed");
-    let filled_buf = &mut buf[..amt];
-    let incoming_message = String::from_utf8_lossy(filled_buf).into_owned();
-    println!("SERVER --> {:?}", incoming_message);
+
+impl Host {
+    pub fn new(IP: IpAddr) -> Self {
+        Self {
+            socket: UdpSocket::bind(format!("{}:{}", IP, PORT)).unwrap(),
+            clients: vec![],
+            clients_data : vec![]
+        }
+    }
+
+    pub fn add_player(&mut self, player: Player){
+        self.clients_data.push(player)
+    }
+    pub fn listen_events() {}
+
+    pub fn broadcast_to_players() {}
+
+    pub fn read_incoming_messages(&self) {
+        let mut buf = [0; 2048];
+        let (amt, _src) = self.socket.recv_from(&mut buf).expect("incoming message failed");
+        let filled_buf = &mut buf[..amt];
+        let incoming_message = String::from_utf8_lossy(filled_buf).into_owned();
+        println!("SERVER --> {:?}", incoming_message);
+    }
+
 }
