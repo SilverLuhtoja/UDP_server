@@ -44,6 +44,7 @@ struct Message {
 
 // const ADDR: &str = "127.0.0.1";
 const ADDR: IpAddr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+const TIMER: u8 = 60;
 
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
@@ -57,6 +58,7 @@ async fn main() -> std::io::Result<()> {
     let mut players: HashMap<SocketAddr, Player> = HashMap::new();
  
     let client = Client::new(ADDR);
+    let my_addr = "127.0.0.1:34254";
     client.socket.connect(server_addr).expect("Connecting With Server Failed!");
     println!("Creating server : {:?}.Listening....", client);
 
@@ -66,49 +68,68 @@ async fn main() -> std::io::Result<()> {
     };
     client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
 
-    let mut data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+    let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
     let map = data.map;
     players = data.players;
+    let mut  my_point = Point::new(0.0,0.0);
     // player.set_postion(data.location);
+    let mut fps = TIMER;
     loop {
         map.draw();
-        for (k,v) in &players{
-            v.draw(); // allPlayers update (including player itself)
+        // allPlayers update (including player itself)
+        for (k,player) in &players{ 
+            if k.to_string() == my_addr{
+                my_point = player.location;
+            }
+            player.draw();
         }
         // player.draw();
+        println!("{}", fps);
+        fps -= 1;
+        if fps == 0 {
+            println!("Sending Update now");
+            message = Message {message_type: "update".to_string(),data: json!(""),};
+            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
 
-        // if is_key_pressed(KeyCode::A) {
-        //     let point = Point::new(player.location.x - 20.0, player.location.y);
-        //     message = Message {message_type: "movement".to_string(),data: json!(point),};
-        //     client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+            let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            players = data.players;
+            fps=TIMER;
+        }
 
-        //     data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-        //     player.set_postion(data.location);
-        // }
-        // if is_key_pressed(KeyCode::D) {
-        //     let point = Point::new(player.location.x + 20.0, player.location.y);
-        //     message = Message {message_type: "movement".to_string(),data: json!(point),};
-        //     client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
 
-        //     data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-        //     player.set_postion(data.location);
-        // }
-        // if is_key_pressed(KeyCode::W) {
-        //     let point = Point::new(player.location.x, player.location.y - 20.0);
-        //     message = Message {message_type: "movement".to_string(),data: json!(point),};
-        //     client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
 
-        //     data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-        //     player.set_postion(data.location);
-        // }
-        // if is_key_pressed(KeyCode::S) {
-        //     let point = Point::new(player.location.x, player.location.y + 20.0);
-        //     message = Message {message_type: "movement".to_string(),data: json!(point),};
-        //     client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+        if is_key_pressed(KeyCode::A) {
+            let point = Point::new(my_point.x - 20.0, my_point.y);
+            message = Message {message_type: "movement".to_string(),data: json!(point),};
+            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
 
-        //     data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-        //     player.set_postion(data.location);
-        // }
+            // data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            // player.set_postion(data.location);
+        }
+        if is_key_pressed(KeyCode::D) {
+            let point = Point::new(my_point.x + 20.0, my_point.y);
+            message = Message {message_type: "movement".to_string(),data: json!(point),};
+            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+
+            // data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            // player.set_postion(data.location);
+        }
+        if is_key_pressed(KeyCode::W) {
+            let point = Point::new(my_point.x, my_point.y - 20.0);
+            message = Message {message_type: "movement".to_string(),data: json!(point),};
+            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+
+            // data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            // player.set_postion(data.location);
+        }
+        if is_key_pressed(KeyCode::S) {
+            let point = Point::new(my_point.x, my_point.y + 20.0);
+            message = Message {message_type: "movement".to_string(),data: json!(point),};
+            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+
+            // data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            // player.set_postion(data.location);
+        }
 
         if is_key_pressed(KeyCode::Escape) {
             exit(1)
