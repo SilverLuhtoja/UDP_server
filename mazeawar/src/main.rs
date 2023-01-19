@@ -43,16 +43,16 @@ const ADDR: IpAddr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
 async fn main() -> std::io::Result<()> {
     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 4242);
 
-    let spawn_point = Point::new(100.0, 100.0);
+    let spawn_point = Point::new(20.0, 20.0);
     let mut player = Player::new(spawn_point);
 
     let client = Client::new(ADDR);
     println!("Creating server : {:?}.Listening....",client);
 
-    let message = Message { message_type: "connect".to_string(), data: json!("")};
+    let mut message = Message { message_type: "connect".to_string(), data: json!("")};
     client.socket.send_to(serde_json::to_string(&message)?.as_bytes(), server_addr)?;
 
-    let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+    let mut data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
     let map = data.map;
     player.set_postion(data.location);
     loop {
@@ -62,36 +62,35 @@ async fn main() -> std::io::Result<()> {
 
         if is_key_pressed(KeyCode::A) {
             let point = Point::new(player.location.x - 20.0, player.location.y);
-            let message = Message { message_type: "movement".to_string(), data: json!(point) };
-            client.socket.send_to(serde_json::to_string(&message)?.as_bytes(), server_addr)?;
+             message = Message { message_type: "movement".to_string(), data: json!(point) };
             client.socket.send_to(json!(&message).to_string().as_bytes(), server_addr)?;
 
-            let returned_server_point: Point = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-            player.set_postion(returned_server_point);
+            data= serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            player.set_postion(data.location);
         }
         if is_key_pressed(KeyCode::D) {
             let point = Point::new(player.location.x + 20.0, player.location.y);
-            let message = Message { message_type: "movement".to_string(), data: json!(point) };
+             message = Message { message_type: "movement".to_string(), data: json!(point) };
             client.socket.send_to(serde_json::to_string(&message)?.as_bytes(), server_addr)?;
 
-            let returned_server_point: Point = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-            player.set_postion(returned_server_point);
+            data= serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            player.set_postion(data.location);
         }
         if is_key_pressed(KeyCode::W) {
             let point = Point::new(player.location.x, player.location.y - 20.0);
-            let message = Message { message_type: "movement".to_string(), data: json!(point) };
+             message = Message { message_type: "movement".to_string(), data: json!(point) };
             client.socket.send_to(serde_json::to_string(&message)?.as_bytes(), server_addr)?;
 
-            let returned_server_point: Point = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-            player.set_postion(returned_server_point);
+              data= serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            player.set_postion(data.location);
         }
         if is_key_pressed(KeyCode::S) {
             let point = Point::new(player.location.x, player.location.y + 20.0);
-            let message = Message { message_type: "movement".to_string(), data: json!(point) };
+             message = Message { message_type: "movement".to_string(), data: json!(point) };
             client.socket.send_to(serde_json::to_string(&message)?.as_bytes(), server_addr)?;
 
-            let returned_server_point: Point = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-            player.set_postion(returned_server_point);
+            data= serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            player.set_postion(data.location);
         }
 
         if is_key_pressed(KeyCode::Escape) {
@@ -106,6 +105,6 @@ pub fn read_incoming_messages(socket: &UdpSocket) -> String {
     let (amt, _src) = socket.recv_from(&mut buf).expect("incoming message failed");
     let filled_buf = &mut buf[..amt];
     let incoming_message = String::from_utf8_lossy(filled_buf).into_owned();
-    println!("SERVER --> {:?}", incoming_message);
+    // println!("SERVER --> {:?}", incoming_message);
     incoming_message
 }
