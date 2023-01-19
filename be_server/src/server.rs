@@ -4,19 +4,19 @@ use std::net::{SocketAddr, UdpSocket, IpAddr};
 use crate::player::Player;
 
 // const ADDR: &str = "127.0.0.1";
-const PORT: u16 = 4242;
+const PORT: u16 = 34254;
 
 // needs mutable hashmap for IP => {PlayerData}
 
 #[derive(Debug)]
-pub struct Host {
+pub struct Server {
     pub socket: UdpSocket,
     pub clients: Vec<SocketAddr>,
     pub clients_data: Vec<Player>
 }
 
 
-impl Host {
+impl Server {
     pub fn new(IP: IpAddr) -> Self {
         Self {
             socket: UdpSocket::bind(format!("{}:{}", IP, PORT)).unwrap(),
