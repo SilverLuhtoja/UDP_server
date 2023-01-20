@@ -1,13 +1,16 @@
-use crate::client_server::*;
-use crate::map::Map;
-use crate::player::*;
-use macroquad::prelude::*;
-use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
-use serde_json::*;
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::process::exit;
+
+use macroquad::prelude::*;
+use serde::{Deserialize, Serialize};
+use serde_json::*;
+use serde_json::json;
+use serde_json::Value as JsonValue;
+
+use crate::client_server::*;
+use crate::map::Map;
+use crate::player::*;
 
 mod client_server;
 mod map;
@@ -50,64 +53,61 @@ async fn main() -> std::io::Result<()> {
         message_type: "connect".to_string(),
         data: json!(""),
     };
-    client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+    client.socket.send(to_string(&message)?.as_bytes())?;
 
-    let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+    let data: Data = from_str(&read_incoming_messages(&client.socket))?;
     let map = data.map;
     let mut players: HashMap<SocketAddr, Player> = data.players;
-    let mut my_point = Point::new(0.0,0.0);
+    let mut my_point = Point::new(0.0, 0.0);
     let mut fps = TIMER;
 
     loop {
         map.draw();
         // allPlayers update (including player itself)
-        for (k,player) in &players{ 
-            if k.to_string() == my_addr{
+        for (k, player) in &players {
+            if k.to_string() == my_addr {
                 my_point = player.location;
             }
             player.draw();
         }
 
         //-- Request update - -//
-        // fps -= 1;
-        // if fps == 0 {
-        //     message = Message {message_type: "update".to_string(),data: json!(""),};
-        //     client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
-        //     let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
-        //     players = data.players;
-        //     fps=TIMER;
-        // }
+
+        message = Message { message_type: "update".to_string(), data: json!("") };
+        client.socket.send(to_string(&message)?.as_bytes())?;
+        let data: Data = from_str(&read_incoming_messages(&client.socket))?;
+        players = data.players;
 
         if is_key_pressed(KeyCode::A) {
             let point = Point::new(my_point.x - 20.0, my_point.y);
-            message = Message {message_type: "movement".to_string(),data: json!(point),};
-            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+            message = Message { message_type: "movement".to_string(), data: json!(point) };
+            client.socket.send(to_string(&message)?.as_bytes())?;
 
-            let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            let data: Data = from_str(&read_incoming_messages(&client.socket))?;
             players = data.players;
         }
         if is_key_pressed(KeyCode::D) {
             let point = Point::new(my_point.x + 20.0, my_point.y);
-            message = Message {message_type: "movement".to_string(),data: json!(point),};
-            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+            message = Message { message_type: "movement".to_string(), data: json!(point) };
+            client.socket.send(to_string(&message)?.as_bytes())?;
 
-            let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            let data: Data = from_str(&read_incoming_messages(&client.socket))?;
             players = data.players;
         }
         if is_key_pressed(KeyCode::W) {
             let point = Point::new(my_point.x, my_point.y - 20.0);
-            message = Message {message_type: "movement".to_string(),data: json!(point),};
-            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+            message = Message { message_type: "movement".to_string(), data: json!(point) };
+            client.socket.send(to_string(&message)?.as_bytes())?;
 
-            let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            let data: Data = from_str(&read_incoming_messages(&client.socket))?;
             players = data.players;
         }
         if is_key_pressed(KeyCode::S) {
             let point = Point::new(my_point.x, my_point.y + 20.0);
-            message = Message {message_type: "movement".to_string(),data: json!(point),};
-            client.socket.send(serde_json::to_string(&message)?.as_bytes())?;
+            message = Message { message_type: "movement".to_string(), data: json!(point) };
+            client.socket.send(to_string(&message)?.as_bytes())?;
 
-            let data: Data = serde_json::from_str(&read_incoming_messages(&client.socket))?;
+            let data: Data = from_str(&read_incoming_messages(&client.socket))?;
             players = data.players;
         }
 
