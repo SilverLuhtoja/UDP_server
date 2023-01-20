@@ -1,18 +1,20 @@
+use std::collections::HashMap;
+use std::net::{SocketAddr, ToSocketAddrs, UdpSocket};
+use local_ip_address::local_ip;
+
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use serde_json::Value as JsonValue;
+
+use player::{Player, Point};
+
+use crate::{maze::{Grid, LOW}};
+
 mod map;
 mod maze;
 mod player;
 
-use player::{Player, Point};
-use serde::{Deserialize, Serialize};
-use serde_json::{json};
-use serde_json::Value as JsonValue;
-use std::net::{UdpSocket, SocketAddr};
-use crate::{maze::{Grid, LOW}};
-use std::collections::HashMap;
-
-const ADDR: &str = "127.0.0.1";
 const PORT: u16 = 4242;
-
 
 #[derive(Clone, Debug, PartialEq,Deserialize, Serialize)]
 struct Data{
@@ -26,13 +28,14 @@ struct BroadcastMessage{
     players : HashMap<SocketAddr, Player>
 }
 fn main() -> std::io::Result<()> {
-    let socket = UdpSocket::bind(format!("{}:{}", ADDR, PORT))?;
+    let my_local_ip = local_ip().unwrap();
+    let socket = UdpSocket::bind(format!("{}:{}", my_local_ip, PORT))?;
     let mut buf = [0; 24000];
     let mut grid = Grid::new(10, 10, LOW);
     grid.generate_maze();
     let map = grid.convert_to_map();
     let mut players:HashMap<SocketAddr, Player> = HashMap::new();
-    println!("Creating server : {:?}.Listening....", socket);
+    println!("Creating server : {:?}.Listening....", socket.local_addr());
 
     let mut message = BroadcastMessage{
                 map: json!(map),

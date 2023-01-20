@@ -1,5 +1,7 @@
+use std::{io, net::{IpAddr, SocketAddr, UdpSocket}};
+use std::net::SocketAddrV4;
+
 use local_ip_address::local_ip;
-use std::{net::{SocketAddr, UdpSocket, IpAddr}, io};
 
 use crate::player::Player;
 
@@ -13,15 +15,13 @@ pub struct Client {
     pub socket: UdpSocket,
 }
 
-
 impl Client {
-    pub fn new(IP: IpAddr) -> Self {
+    pub fn new() -> Self {
         Self {
-            socket: UdpSocket::bind(format!("{}:{}", IP, PORT)).unwrap(),
+            socket: UdpSocket::bind(format!("{}", SocketAddrV4::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0))).unwrap(),
         }
     }
 
- 
     pub fn listen_events() {}
 
     pub fn broadcast_to_players() {}
@@ -33,5 +33,4 @@ impl Client {
         let incoming_message = String::from_utf8_lossy(filled_buf).into_owned();
         println!("SERVER --> {:?}", incoming_message);
     }
-
 }

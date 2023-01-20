@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use serde_json::*;
 use std::collections::HashMap;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::process::exit;
 
 mod client_server;
@@ -35,17 +35,16 @@ fn window_conf() -> Conf {
     }
 }
 
-// const ADDR: &str = "127.0.0.1";
-const ADDR: IpAddr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
 const TIMER: u8 = 60;
 
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 4242);
-    let client = Client::new(ADDR);
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 4)), 4242);
+    let client = Client::new();
+    println!("{:?}", client);
     let my_addr = "127.0.0.1:34254";
     client.socket.connect(server_addr).expect("Connecting With Server Failed!");
-    println!("Creating server : {:?}.Listening....", client);
+    println!("Creating client-server : {:?}.Listening....", client);
 
     let mut message = Message {
         message_type: "connect".to_string(),
@@ -69,7 +68,6 @@ async fn main() -> std::io::Result<()> {
             player.draw();
         }
 
-
         //-- Request update - -//
         // fps -= 1;
         // if fps == 0 {
@@ -79,8 +77,6 @@ async fn main() -> std::io::Result<()> {
         //     players = data.players;
         //     fps=TIMER;
         // }
-
-
 
         if is_key_pressed(KeyCode::A) {
             let point = Point::new(my_point.x - 20.0, my_point.y);
