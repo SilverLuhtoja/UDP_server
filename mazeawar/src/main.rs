@@ -41,10 +41,10 @@ const TIMER: u8 = 60;
 async fn main() -> std::io::Result<()> {
     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 4)), 4242);
     let client = Client::new();
-    println!("{:?}", client);
-    let my_addr = "127.0.0.1:34254";
     client.socket.connect(server_addr).expect("Connecting With Server Failed!");
     println!("Creating client-server : {:?}.Listening....", client);
+
+    let my_addr = client.socket.local_addr().unwrap().to_string();
 
     let mut message = Message {
         message_type: "connect".to_string(),
