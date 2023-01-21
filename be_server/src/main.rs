@@ -2,13 +2,16 @@ mod map;
 mod maze;
 mod player;
 
+use local_ip_address::local_ip;
 use player::{Player, Point};
 use serde::{Deserialize, Serialize};
 use serde_json::{json};
 use serde_json::Value as JsonValue;
-use std::net::{UdpSocket, SocketAddr};
 use crate::{maze::{Grid, LOW}};
 use std::collections::HashMap;
+use std::net::SocketAddr;
+use tokio::net::UdpSocket;
+use std::io;
 
 const ADDR: &str = "127.0.0.1";
 const PORT: u16 = 4242;
@@ -25,9 +28,14 @@ struct BroadcastMessage{
     map: JsonValue,
     players : HashMap<SocketAddr, Player>
 }
-fn main() -> std::io::Result<()> {
-    let socket = UdpSocket::bind(format!("{}:{}", ADDR, PORT))?;
-    let mut buf = [0; 24000];
+
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
+    
+    let my_local_ip = local_ip().unwrap();
+    // let socket = UdpSocket::bind(format!("{}:{}", my_local_ip, PORT))?;
+    let socket = UdpSocket::bind(format!("{}:{}", my_local_ip, PORT)).await?;
+    let mut buf = [0; 6000];
     let mut grid = Grid::new(10, 10, LOW);
     grid.generate_maze();
     let map = grid.convert_to_map();
@@ -40,11 +48,12 @@ fn main() -> std::io::Result<()> {
             };
 
     loop {
-        println!();
+        // println!();
         // (bite_slice, address where it came from)
-        let (amt, src) = socket.recv_from(&mut buf).expect("incoming message failed");
+        // let (amt, src) = socket.recv_from(&mut buf).expect("incoming message failed");
+        let (amt, src) = socket.recv_from(&mut buf).await?;
         let incoming_message = String::from_utf8_lossy(&mut buf[..amt]);
-        println!("client <{}>: {:?}", src, incoming_message);
+        // println!("client <{}>: {:?}", src, incoming_message);
 
         let data: Data = serde_json::from_str(&incoming_message)?;
         if data.message_type == "movement" {
@@ -63,7 +72,7 @@ fn main() -> std::io::Result<()> {
 
         message.players = players.clone();
         for (addr,_) in &players{
-            socket.send_to(json!(&message).to_string().as_bytes(), addr)?;
+            socket.send_to(json!(&message).to_string().as_bytes(), addr).await?;
         }
     }
 }
