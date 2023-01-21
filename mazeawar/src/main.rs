@@ -54,20 +54,25 @@ pub async fn create_client() -> std::io::Result<UdpSocket> {
 #[macroquad::main(window_conf)]
 async fn main() {
     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 4242);
-    let mut buf = [0; 1024];
+    let mut buf = [0; 6000];
     // let client = create_client().await.unwrap();
     let rt = tokio::runtime::Runtime::new().unwrap();
+    let mut connected = false;
+    let mut message = Message {
+        message_type: "connect".to_string(),
+        data: json!(""),
+    };
     
     loop {
         let data = rt.block_on(async {
-            let mut message = Message {
-                message_type: "connect".to_string(),
-                data: json!(""),
-            };
+            if connected{
+                message.message_type = "update".to_string();
+            }
             // This needs to change
             let client = UdpSocket::bind("10.5.0.2:34254").await.unwrap();
             client.connect(server_addr).await.unwrap();
             client.send(to_string(&message).unwrap().as_bytes()).await.unwrap();
+            connected = true;
 
             let (recv_len, _) = client.recv_from(&mut buf).await.unwrap();
             let incoming_message = String::from_utf8_lossy(&buf[..recv_len]);
