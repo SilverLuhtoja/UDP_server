@@ -6,6 +6,9 @@ use clientel_server::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
+mod player;
+use player::{Player, to_radians};
+
 
 const ADDR:&str = "127.0.0.1";
 const SERVER_PORT:u16 = 4242;
@@ -51,34 +54,34 @@ async fn main() -> std::io::Result<()> {
 
     loop{
         clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
+        let mut game_board = GameBoard::new(map.clone());
+        let visual_board = MazeVisual::new(game_board.clone());
+        let score_board = ScoreBoard::new(visual_board.clone(), players.clone());
 
-        // player.speed = 0.0;
-
-        
 
         if is_key_down(KeyCode::Left) {
             println!("\nwrite to server:");
-            player.angle -= toRadians(1.0);
+            player.angle -= to_radians(5.0);
             socket.send("Left".as_bytes()).expect("Error on send");
         }
 
         if is_key_down(KeyCode::Right) {
             println!("\nwrite to server:");
-            player.angle += toRadians(1.0);
+            player.angle += to_radians(5.0);
             socket.send("Right".as_bytes()).expect("Error on send");
         }
 
         if is_key_down(KeyCode::Up) {
             println!("\nwrite to server:");
             player.speed = 0.5;
-            movePlayer(&mut player);
+            player.move_player(game_board.clone());
             socket.send("Up".as_bytes()).expect("Error on send");
         }
 
         if is_key_down(KeyCode::Down) {
             println!("\nwrite to server:");
             player.speed = -0.5;
-            movePlayer(&mut player);
+            player.move_player(game_board.clone());
             socket.send("Down".as_bytes()).expect("Error on send");
         }
 
@@ -98,14 +101,13 @@ async fn main() -> std::io::Result<()> {
         //     read_incoming_messages(&socket);
         // }
 
-        let game_board = GameBoard::new(map.clone());
-        let visual_board = MazeVisual::new(game_board.clone());
-        let score_board = ScoreBoard::new(visual_board.clone(), players.clone());
-        game_board.draw();
-        visual_board.draw();
-        score_board.draw();
-        player.draw();
+      
 
+        
+        game_board.draw();
+        // visual_board.draw();
+        score_board.draw();
+        player.draw(game_board.clone());
         next_frame().await
     }
 
@@ -134,10 +136,3 @@ fn read_incoming_messages(socket :&UdpSocket) {
     }
 }
 
-fn toRadians(deg: f32) -> f32 {
-    (deg * PI as f32) / 180.0
-}
-fn movePlayer(player: &mut Player) {
-    player.x += player.angle.cos() * player.speed;
-    player.y += player.angle.sin() * player.speed;
-}

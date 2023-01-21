@@ -1,19 +1,16 @@
 use macroquad::prelude::*;
 use std::collections::HashMap;
 
-// pub fn add(left: usize, right: usize) -> usize {
-//     left + right
-// }
 
-const CAP_SIZE: f32 = 1.0;
 const PADDING: f32 = 20.0;
-const PLAYER_SIZE:f32 = 10.0;
-const PLAYER_RAY_LENGTH:f32 = PLAYER_SIZE * 2.0;
+const CAP_SIZE: f32 = 0.0;
+
 
 #[derive(Debug, Clone)]
 pub struct GameBoard {
     pub board: Vec<Vec<i32>>,
     pub setup: Settings,
+    pub wall_coordinates: Vec<(f32, f32)>,
 }
 
 #[derive(Debug, Clone)]
@@ -22,34 +19,10 @@ pub struct Settings {
     pub center_y_offset: f32,
     pub cube_size: f32,
     pub board_height: f32,
-}
-
-pub struct Player {
-    pub x: f32,
-    pub y: f32,
-    pub angle: f32,
-    pub speed: f32,
-}
-
-impl Player {
-    pub fn new(x:f32, y:f32, angle:f32, speed:f32) -> Player {
-        Self {x, y, angle, speed}    
-    }
-    pub fn draw(&self) {
-        // player.x = (j as f32 * self.setup.cube_size) + PADDING;
-        // player.y = (i as f32 * self.setup.cube_size) + self.setup.center_y_offset*2.0 - PADDING;
-        
-        //draw player on the screen
-        draw_circle(self.x, self.y, PLAYER_SIZE/2.0, RED);
-        
-        //Draw a line from player to show it`s direction
-        draw_line(self.x, self.y, self.x + self.angle.cos() * PLAYER_RAY_LENGTH, self.y + self.angle.sin() * PLAYER_RAY_LENGTH, 1.0, RED);
-        
-        //Draw rays from player
-        // for ray in rays.iter() {
-        //     draw_line(player.x, player.y + PLAYER_SIZE/2.0, (player.x + ray.angle.cos() * ray.distance), (player.y + ray.angle.sin() * ray.distance)+ PLAYER_SIZE/2.0, 1.0, YELLOW);
-        // }
-    }
+    pub start_x: f32,
+    pub start_y:f32,
+    pub finish_x: f32,
+    pub finish_y:f32
 }
 
 impl Settings{
@@ -62,6 +35,10 @@ impl Settings{
             center_y_offset: get_center_y(board.len() as f32, cube_size),
             cube_size,
             board_height: horizontal_cubes,
+            start_x: 0.0,
+            start_y: 0.0,
+            finish_x: 0.0,
+            finish_y: 0.0
         }
     }
 }
@@ -71,11 +48,12 @@ impl GameBoard {
         let setup = Settings::new(map.clone());
         Self {
             board: map.clone(),
-            setup
+            setup,
+            wall_coordinates: Vec::new(),
         }
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&mut self) {
         draw_rectangle(
             20.0,
             self.setup.center_y_offset + self.setup.center_y_offset - CAP_SIZE - PADDING,
@@ -87,6 +65,15 @@ impl GameBoard {
             for j in 0..self.board[0].len() {
                 match self.board[i][j] {
                     1 => {
+                        self.wall_coordinates.push(((j as f32 * self.setup.cube_size) + PADDING, (i as f32 * self.setup.cube_size) + self.setup.center_y_offset*2.0 - PADDING));
+                        if i == 0 && j == 0 {
+                            self.setup.start_x = (j as f32 * self.setup.cube_size) + PADDING;
+                            self.setup.start_y = (i as f32 * self.setup.cube_size) + self.setup.center_y_offset*2.0 - PADDING;
+                        }
+                        if i == self.board.len() - 1 && j == self.board[0].len() - 1 {
+                            self.setup.finish_x = (j as f32 * self.setup.cube_size) + PADDING;
+                            self.setup.finish_y = (i as f32 * self.setup.cube_size) + self.setup.center_y_offset*2.0 - PADDING;
+                        }
                         draw_rectangle(
                             (j as f32 * self.setup.cube_size) + PADDING,
                             (i as f32 * self.setup.cube_size) + self.setup.center_y_offset*2.0 - PADDING,
@@ -107,6 +94,10 @@ impl GameBoard {
             0  => WHITE,
             _ => GREEN,
         }
+    }
+
+    pub fn out_of_map_bounce(&self, x: f32, y: f32) ->bool {
+        x < 0.0 || x >= self.board[0].len() as f32 || y < 0.0 || y >= self.board.len() as f32
     }
 }
 
@@ -149,6 +140,8 @@ impl MazeVisual {
         );
     }
 }
+
+
 
 #[derive(Debug, Clone)]
 pub struct ScoreBoard {
