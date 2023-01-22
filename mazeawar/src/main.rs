@@ -48,33 +48,18 @@ fn window_conf() -> Conf {
 async fn main() {
     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 4242);
     let mut buf = [0; 6000];
-<<<<<<< HEAD
     let runtime = tokio::runtime::Runtime::new().unwrap();
     let message = Message {
-=======
-    // let client = create_client().await.unwrap();
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    let mut connected = false;
-    let mut message = Message {
->>>>>>> 78635ee23c3c1f0bbab5efd674edd6eabcf9e65c
         message_type: "connect".to_string(),
         data: json!(""),
     };
     
     loop {
-<<<<<<< HEAD
         let data = runtime.block_on(async {
-=======
-        let data = rt.block_on(async {
-            if connected{
-                message.message_type = "update".to_string();
-            }
->>>>>>> 78635ee23c3c1f0bbab5efd674edd6eabcf9e65c
             // This needs to change
             let client = UdpSocket::bind("10.5.0.2:34255").await.unwrap();
             client.connect(server_addr).await.unwrap();
             client.send(to_string(&message).unwrap().as_bytes()).await.unwrap();
-            connected = true;
 
             let (recv_len, _) = client.recv_from(&mut buf).await.unwrap();
             let incoming_message = String::from_utf8_lossy(&buf[..recv_len]);
