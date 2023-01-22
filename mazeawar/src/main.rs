@@ -1,9 +1,11 @@
-#![allow(dead_code)]
+// #![allow(dead_code)]
 #![allow(unused_imports)]
 
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::process::exit;
+use std::sync::{Mutex, Arc};
+use std::sync::mpsc::{channel, Sender};
 
 use crate::maze::{Grid, LOW};
 use macroquad::prelude::*;
@@ -13,6 +15,10 @@ use serde_json::Value as JsonValue;
 use serde_json::*;
 use tokio::join;
 use tokio::net::UdpSocket;
+use tokio::sync::mpsc;
+use std::thread;
+use std::time::Duration;
+use tokio::task;
 
 use crate::client_server::*;
 use crate::map::Map;
@@ -24,15 +30,15 @@ mod maze;
 mod player;
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-struct Data {
+pub struct Data {
     map: Map,
     players: HashMap<SocketAddr, Player>,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-struct Message {
-    message_type: String,
-    data: JsonValue,
+pub struct Message {
+     message_type: String,
+     data: JsonValue,
 }
 
 fn window_conf() -> Conf {
@@ -53,48 +59,122 @@ async fn main() {
         message_type: "connect".to_string(),
         data: json!(""),
     };
+    // let (tx, mut rx) = mpsc::channel::<(Vec<u8>, SocketAddr)>(1_000);
+    // runtime.block_on(async move {
+    //     let sock =  UdpSocket::bind("10.5.0.2:34255").await.unwrap();
+    //     let r = Arc::new(sock);
+    //     let s = r.clone();
+
+    //     tokio::spawn(async move{
+    //         while let Some((bytes,addr)) = rx.recv().await{
+    //             let len = s.send_to(&bytes, &server_addr).await.unwrap();
+    //             println!("{:?} bytes sent", len);
+    //         }
+    //     });
+
+    //     let mut buf = [0; 1024];
+    //     loop {
+    //         let (len, addr) = r.recv_from(&mut buf).await.unwrap();
+    //         println!("{:?} bytes received from {:?}", len, addr);
+    //         tx.send((buf[..len].to_vec(), addr)).await.unwrap();
+    //     }
+    // });
+
+
+    //transmitter, receiver
+    // let (tx, rx) = mpsc::channel(10);
+    // let data =rx.recv().await.unwrap();
+
     
+    
+
+    // println!("Got: {:?}", data);
+    
+    let mut my_point = Point::new(0.0, 0.0);
+    let mut  message = Message {
+           message_type: "connect".to_string(),
+           data: json!(""),
+       };
+    ok(&message);
+    message.message_type = "update".to_string();
     loop {
-        let data = runtime.block_on(async {
-            // This needs to change
-            let client = UdpSocket::bind("10.5.0.2:34255").await.unwrap();
-            client.connect(server_addr).await.unwrap();
-            client.send(to_string(&message).unwrap().as_bytes()).await.unwrap();
-
-            let (recv_len, _) = client.recv_from(&mut buf).await.unwrap();
-            let incoming_message = String::from_utf8_lossy(&buf[..recv_len]);
-            let data: Data = serde_json::from_str(&incoming_message).unwrap();
-
-            println!("MESSAGE ");
-            return data;
-        });
+        let data:Data = ok(&message);
         
-
         data.map.draw();
-        for (_, player) in &data.players {
+        for (src, player) in &data.players {
+            if src.to_string() == "10.5.0.2:34255"{
+                my_point = player.location
+            }
             player.draw();
         }
-
+        
         if is_key_pressed(KeyCode::Escape) {
             exit(1)
         }
+
+        if is_key_pressed(KeyCode::A) {
+            let point = Point::new(my_point.x - 20.0, my_point.y);
+            let message = Message { message_type: "movement".to_string(), data: json!(point) };
+            ok(&message);
+        }
+
+        if is_key_pressed(KeyCode::D) {
+            let point = Point::new(my_point.x + 20.0, my_point.y);
+            let message = Message { message_type: "movement".to_string(), data: json!(point) };
+            ok(&message);
+        }
+
         next_frame().await;
     }
 }
 
+pub fn ok(message: &Message) -> Data{
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    let mut buf = [0; 6000];
+    return runtime.block_on(async {
+            let client = UdpSocket::bind("10.5.0.2:34255").await.unwrap();
+            client.connect("10.5.0.2:4242").await.unwrap();
+            client.send(to_string(&message).unwrap().as_bytes()).await.unwrap();
+        
+            let (recv_len, _) = client.recv_from(&mut buf).await.unwrap();
+            let incoming_message = String::from_utf8_lossy(&buf[..recv_len]);
+            let data: Data = serde_json::from_str(&incoming_message).unwrap();
+            
+            return data
+    });
+}
+
+// runtime.block_on(async {
+//     tokio::spawn(async move {
+//         let client = UdpSocket::bind("10.5.0.2:34255").await.unwrap();
+//         client.connect(server_addr).await.unwrap();
+
+//         loop{
+//             client.send(to_string(&message).unwrap().as_bytes()).await.unwrap();
+        
+//             let (recv_len, _) = client.recv_from(&mut buf).await.unwrap();
+//             let incoming_message = String::from_utf8_lossy(&buf[..recv_len]);
+//             let data: Data = serde_json::from_str(&incoming_message).unwrap();
+            
+//             println!("MESSAGE ");
+//             tx.send(data).await.unwrap();
+//         }
+//     });
+// });
+
 // #[macroquad::main(window_conf)]
 // async fn main() -> std::io::Result<()> {
-//     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 4242);
-//     let mut rt = tokio::runtime::Runtime::new().unwrap();
-//     rt.block_on(async {
-//         let client = UdpSocket::bind(format!(
-//             "{}",
-//             SocketAddrV4::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0)
-//         ))
-//         .await?;
-
-//         client.connect(server_addr).await?;
-//         println!("Creating client-server : {:?}.Listening....", client);
+    //     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 4242);
+    //     let mut rt = tokio::runtime::Runtime::new().unwrap();
+    //     rt.block_on(async {
+        //         let client = UdpSocket::bind(format!(
+            //             "{}",
+            //             SocketAddrV4::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0)
+            //         ))
+            //         .await?;
+            
+            //         client.connect(server_addr).await?;
+            //         println!("Creating client-server : {:?}.Listening....", client);
 
 //         let my_addr = client.local_addr().unwrap().to_string();
 

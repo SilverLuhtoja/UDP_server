@@ -15,6 +15,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 
+
 const PORT: u16 = 4242;
 
 
@@ -46,7 +47,7 @@ async fn main() -> std::io::Result<()> {
                 map: json!(map),
                 players : players.clone()
             };
-
+    
     loop {
         let (recv_len, src) = socket.recv_from(&mut buf).await?;
         let incoming_message = String::from_utf8_lossy(&buf[..recv_len]);
@@ -60,17 +61,17 @@ async fn main() -> std::io::Result<()> {
             let player = Player::new(location);
             players.insert(src,player);
         }
-        if data.message_type == "update" {
-            let current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
-            current_player.location = Point::new(current_player.location.x + 1.0, current_player.location.y + 1.0);
-            
-        }
-        
-        // if data.message_type == "movement" {
+        // if data.message_type == "update" {
         //     let current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
-        //     let point:Point = serde_json::from_value(data.data)?;
-        //     current_player.location = point;
+        //     current_player.location = Point::new(current_player.location.x + 1.0, current_player.location.y + 1.0);
+            
         // }
+        
+        if data.message_type == "movement" {
+            let current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
+            let point:Point = serde_json::from_value(data.data)?;
+            current_player.location = point;
+        }
         
         message.players = players.clone();
         for (addr,_) in &players{
