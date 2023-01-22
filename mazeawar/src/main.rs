@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::process::exit;
@@ -32,11 +35,6 @@ struct Message {
     data: JsonValue,
 }
 
-enum Gamestate {
-    CONNECT,
-    START
-}
-
 fn window_conf() -> Conf {
     Conf {
         window_title: "MAZE".to_owned(),
@@ -46,26 +44,20 @@ fn window_conf() -> Conf {
     }
 }
 
-pub async fn create_client() -> std::io::Result<UdpSocket> {
-    let client = UdpSocket::bind("0.0.0.0:0").await?;
-    Ok(client)
-}
-
 #[macroquad::main(window_conf)]
 async fn main() {
     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 4242);
-    let mut buf = [0; 1024];
-    // let client = create_client().await.unwrap();
-    let rt = tokio::runtime::Runtime::new().unwrap();
+    let mut buf = [0; 6000];
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    let message = Message {
+        message_type: "connect".to_string(),
+        data: json!(""),
+    };
     
     loop {
-        let data = rt.block_on(async {
-            let mut message = Message {
-                message_type: "connect".to_string(),
-                data: json!(""),
-            };
+        let data = runtime.block_on(async {
             // This needs to change
-            let client = UdpSocket::bind("10.5.0.2:34254").await.unwrap();
+            let client = UdpSocket::bind("10.5.0.2:34255").await.unwrap();
             client.connect(server_addr).await.unwrap();
             client.send(to_string(&message).unwrap().as_bytes()).await.unwrap();
 
@@ -74,7 +66,6 @@ async fn main() {
             let data: Data = serde_json::from_str(&incoming_message).unwrap();
 
             println!("MESSAGE ");
-
             return data;
         });
         

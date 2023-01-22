@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 mod map;
 mod maze;
 mod player;
@@ -11,9 +14,7 @@ use crate::{maze::{Grid, LOW}};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use tokio::net::UdpSocket;
-use std::io;
 
-const ADDR: &str = "127.0.0.1";
 const PORT: u16 = 4242;
 
 
