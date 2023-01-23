@@ -1,12 +1,21 @@
-use local_ip_address::local_ip;
-use std::{net::{SocketAddr, UdpSocket, IpAddr, SocketAddrV4}, io};
+use std::{net::{SocketAddr, UdpSocket, SocketAddrV4}, collections::HashMap};
+use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
+use serde_json::*;
+use crate::{player::Player, map::Map};
 
-use crate::player::Player;
 
-// const ADDR: &str = "127.0.0.1";
-const PORT: u16 = 34254;
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct Message {
+     message_type: String,
+     data: JsonValue,
+}
 
-// needs mutable hashmap for IP => {PlayerData}
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct Data {
+    pub map: Map,
+    pub players: HashMap<SocketAddr, Player>,
+}
 
 #[derive(Debug)]
 pub struct Client {
@@ -15,23 +24,30 @@ pub struct Client {
 
 
 impl Client {
-    pub fn new() -> Self {
-        Self {
-            socket: UdpSocket::bind(format!("{}", SocketAddrV4::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0))).unwrap(),
-        }
+    pub fn new(server_addr: SocketAddr) -> Self {
+        let  socket =  UdpSocket::bind(format!("{}", SocketAddrV4::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0))).expect("ERROR<connect>: bind to address failed");
+        socket.connect(server_addr).expect("ERROR<connect>: failed to connect with main_server");
+        Self {socket}
+    } 
+
+    pub fn send_message(&self, action: &str,  data: JsonValue){
+        let message = Message {
+            message_type : action.to_string(),
+            data,
+        };
+        self.socket.send(json!(&message).to_string().as_bytes()).expect("ERROR<send>: failed to send a message");
     }
 
- 
-    pub fn listen_events() {}
-
-    pub fn broadcast_to_players() {}
-
-    pub fn read_incoming_messages(&self) {
-        let mut buf = [0; 2048];
-        let (amt, _src) = self.socket.recv_from(&mut buf).expect("incoming message failed");
+    pub fn read_message(&self) -> Data {
+        let mut buf = [0; 24000];
+        let (amt, _src) = self.socket.recv_from(&mut buf).expect("ERROR<read>: failed to receive message failed");
         let filled_buf = &mut buf[..amt];
         let incoming_message = String::from_utf8_lossy(filled_buf).into_owned();
         println!("SERVER --> {:?}", incoming_message);
+        serde_json::from_str(&incoming_message).expect("ERROR<read>: couldn't parse message")
     }
 
+    pub fn get_address(&self) -> SocketAddr{
+        self.socket.local_addr().expect("ERROR: Could not get local address")
+    }
 }
