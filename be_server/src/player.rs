@@ -29,14 +29,6 @@ impl Point {
             y
         }
     }
-
-    pub fn zero()->Self{
-        Self { x: 0.0, y: 0.0 }
-    }
-
-    pub fn is_moved(&self)->bool{
-        !(self.x == 0.0 && self.y == 0.0)
-    }
 }
 
 const BOX_SIZE:f32 = 20.0;
@@ -47,6 +39,31 @@ impl Player {
             location,
             looking_at: Direction::UP
         }        
+    }
+
+    // TODO -REFACTOR (its doing 2 things and taking 3 parameters)
+    // take Point and seperate setting Direction
+    pub fn update_position_direction(&mut self, next_position_x: f32, next_position_y: f32, dir: Direction){
+        if self.looking_at == dir{
+            self.location.x = next_position_x;
+            self.location.y = next_position_y;
+        }
+        self.looking_at = dir;
+    }
+    
+    pub fn update_movement(&mut self){
+         if is_key_pressed(KeyCode::A) { 
+            self.update_position_direction(self.location.x - BOX_SIZE, self.location.y, Direction::LEFT)
+        }
+        if is_key_pressed(KeyCode::D) { 
+            self.update_position_direction(self.location.x + BOX_SIZE, self.location.y,Direction::RIGHT)
+        }
+        if is_key_pressed(KeyCode::W) { 
+            self.update_position_direction(self.location.x , self.location.y - BOX_SIZE,Direction::UP)
+        }
+        if is_key_pressed(KeyCode::S) { 
+            self.update_position_direction(self.location.x , self.location.y + BOX_SIZE,Direction::DOWN)
+        }
     }
 
     pub fn draw(&self){
@@ -64,6 +81,10 @@ impl Player {
             Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE , self.location.y + middle_offset, 5.0,  5.0,  RED)
         }
     }
+
+
+
+
 
     pub fn set_postion(&mut self, point: Point){
         self.location = point;

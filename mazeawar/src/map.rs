@@ -1,10 +1,11 @@
 use macroquad::color::{BLACK, WHITE};
 use macroquad::shapes::draw_rectangle;
+use serde::{Serialize, Deserialize};
 
 pub const FLOOR: i32 = 0;
 pub const WALL: i32 = 1;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Map(pub Vec<Vec<i32>>);
 
 impl Map {
