@@ -2,9 +2,10 @@
 // #![allow(unused_imports)]
 // #![allow(unused_variables)]
 
+use std::cell::Cell;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::process::exit;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::sync::mpsc::channel;
 use std::thread;
 use macroquad::prelude::*;
@@ -32,25 +33,28 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 4242);
     let client = Client::new(server_addr);
-
+    
     let sender_clone = Arc::new(client);
     let receiver_clone = sender_clone.clone();
     let (tx, rx) = channel::<Data>();
-
-    thread::spawn(move ||{
+    
+    thread::spawn(move || {
         receiver_clone.send_message("connect", json!(""));
         loop{
-
-            let data = receiver_clone.read_message();
-            tx.send(data).unwrap()
+            let received_data = receiver_clone.read_message();
+            tx.send(received_data).unwrap()
         }
     });
     
-    let data = rx.recv().unwrap();
+   
+    let mut data = Data::default();
     let mut my_point = Point::zero();
-    loop {
-        // client.send_message("update", json!(""));
-        listen_move_events(&my_point, &sender_clone);
+    // Current display updates based on events, should be from back
+    loop { 
+        if let Ok(received_data) = rx.try_recv() {
+            data = received_data;
+        }
+
         data.map.draw();
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string(){
@@ -58,7 +62,8 @@ async fn main() -> std::io::Result<()> {
             }
             player.draw();
         }
-
+        
+        listen_move_events(&my_point, &sender_clone);
         if is_key_pressed(KeyCode::Escape) {
             exit(1)
         }

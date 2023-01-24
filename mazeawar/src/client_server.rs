@@ -11,7 +11,7 @@ pub struct Message {
      data: JsonValue,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, Default)]
 pub struct Data {
     pub map: Map,
     pub players: HashMap<SocketAddr, Player>,

@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 pub const FLOOR: i32 = 0;
 pub const WALL: i32 = 1;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize,Default)]
 pub struct Map(pub Vec<Vec<i32>>);
 
 impl Map {
