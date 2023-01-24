@@ -2,10 +2,9 @@
 // #![allow(unused_imports)]
 // #![allow(unused_variables)]
 
-use std::cell::Cell;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::process::exit;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::thread;
 use macroquad::prelude::*;
@@ -18,7 +17,6 @@ mod client_server;
 mod map;
 mod maze;
 mod player;
-
 
 fn window_conf() -> Conf {
     Conf {
@@ -33,7 +31,6 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 4242);
     let client = Client::new(server_addr);
-    
     let sender_clone = Arc::new(client);
     let receiver_clone = sender_clone.clone();
     let (tx, rx) = channel::<Data>();
@@ -45,7 +42,6 @@ async fn main() -> std::io::Result<()> {
             tx.send(received_data).unwrap()
         }
     });
-    
    
     let mut data = Data::default();
     let mut my_point = Point::zero();
@@ -65,6 +61,7 @@ async fn main() -> std::io::Result<()> {
         
         listen_move_events(&my_point, &sender_clone);
         if is_key_pressed(KeyCode::Escape) {
+            sender_clone.send_message("I QUIT",  json!(""));
             exit(1)
         }
         next_frame().await;

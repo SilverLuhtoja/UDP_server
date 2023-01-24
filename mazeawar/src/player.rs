@@ -1,6 +1,5 @@
 use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 #[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum  Direction {
@@ -24,10 +23,7 @@ pub struct Player{
 
 impl Point {
     pub fn new(x: f32, y: f32) -> Self {
-        Self{
-            x,
-            y
-        }
+        Self { x, y }
     }
 
     pub fn zero()->Self{
