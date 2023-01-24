@@ -2,12 +2,14 @@ use std::io::{self, BufRead};
 use std::net::UdpSocket;
 use std::str;
 use macroquad::prelude::*;
-use clientel_server::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
-mod player;
-use player::{Player, to_radians};
+
+use clientel_server::player::{Player, to_radians};
+use clientel_server::game_window::GameWindow;
+use clientel_server::score_board::ScoreBoard;
+
 
 
 const ADDR:&str = "127.0.0.1";
@@ -19,9 +21,7 @@ const CLIENT_PORT:u16 = 34254;
 fn window_conf() -> Conf {
     Conf {
         window_title: "MAZE WARS".to_owned(),
-        window_width: 1200,
-        window_height: 800,
-        window_resizable: true,
+        fullscreen: true,
         ..Default::default()
     }
 }
@@ -33,30 +33,36 @@ async fn main() -> std::io::Result<()> {
     println!("Establishing UDP socket address at : {:?}", socket);
     try_to_connect(&socket); // "fake handshake"
     let map: Vec<Vec<i32>> = vec![
-        vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        vec![1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
-        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1],
-        vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    ];
-
-    let mut player = Player::new(45.0, 665.0, 0.0, 0.0);
+        vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+        vec![1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+        vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    ];;
+  
+    
+    let mut game_window = GameWindow::new(map.clone());
+    let mut player = Player::new(game_window.minimap_cube_size);
+    player.set_position(game_window.clone());
 
     let mut players = HashMap::new();
-    players.insert(String::from("Anna"), String::from("30"));
+    players.insert(String::from("Anna"), String::from("130"));
     players.insert(String::from("Silver"), String::from("20"));
     players.insert(String::from("Valeria"), String::from("10"));
     players.insert(String::from("Emil"), String::from("05"));
 
-    
+    let score_board = ScoreBoard::new(game_window.clone(), players.clone());
 
     loop{
+
         clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
-        let mut game_board = GameBoard::new(map.clone());
-        let visual_board = MazeVisual::new(game_board.clone());
-        let score_board = ScoreBoard::new(visual_board.clone(), players.clone());
 
 
         if is_key_down(KeyCode::Left) {
@@ -74,14 +80,14 @@ async fn main() -> std::io::Result<()> {
         if is_key_down(KeyCode::Up) {
             println!("\nwrite to server:");
             player.speed = 0.5;
-            player.move_player(game_board.clone());
+            player.move_player(game_window.clone());
             socket.send("Up".as_bytes()).expect("Error on send");
         }
 
         if is_key_down(KeyCode::Down) {
             println!("\nwrite to server:");
             player.speed = -0.5;
-            player.move_player(game_board.clone());
+            player.move_player(game_window.clone());
             socket.send("Down".as_bytes()).expect("Error on send");
         }
 
@@ -101,13 +107,15 @@ async fn main() -> std::io::Result<()> {
         //     read_incoming_messages(&socket);
         // }
 
+        if is_key_pressed(KeyCode::Escape) {
+            break;
+        }
       
-
-        
-        game_board.draw();
-        // visual_board.draw();
+        player.display_room(game_window.clone());
+        game_window.draw();
         score_board.draw();
-        player.draw(game_board.clone());
+        player.draw();
+
         next_frame().await
     }
 
