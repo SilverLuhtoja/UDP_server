@@ -9,6 +9,7 @@ use std::sync::mpsc::channel;
 use std::thread;
 use macroquad::prelude::*;
 use serde_json::*;
+use regex::Regex;
 
 use crate::client_server::*;
 use crate::player::*;
@@ -29,12 +30,15 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 4242);
+    let (input_ip, user_name) = get_user_data();
+    let (addr, port) = parse_ip(input_ip);
+
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(addr[0], addr[1], addr[2], addr[3])), port);
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
     let receiver_clone = sender_clone.clone();
     let (tx, rx) = channel::<Data>();
-    
+
     thread::spawn(move || {
         receiver_clone.send_message("connect", json!(""));
         loop{
@@ -42,15 +46,14 @@ async fn main() -> std::io::Result<()> {
             tx.send(received_data).unwrap()
         }
     });
-   
+
     let mut data = Data::default();
     let mut my_point = Point::zero();
     // Current display updates based on events, should be from back
-    loop { 
+    loop {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
         }
-
         data.map.draw();
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string(){
@@ -58,7 +61,7 @@ async fn main() -> std::io::Result<()> {
             }
             player.draw();
         }
-        
+
         listen_move_events(&my_point, &sender_clone);
         if is_key_pressed(KeyCode::Escape) {
             sender_clone.send_message("I QUIT",  json!(""));
@@ -85,4 +88,48 @@ pub fn listen_move_events(my_point: &Point, client: &Client){
     if point.is_moved(){
         client.send_message("movement", json!(point))
     }
+}
+
+fn get_user_data()-> (String, String) {
+    use std::io::{stdin, stdout, Write};
+    let ip_re = Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+").unwrap();
+    let mut ip = String::new();
+    let mut message = "Enter IP Address: ";
+
+    if !ip_re.is_match(&*ip) {
+        loop {
+            ip = String::new();
+            print!("{}", message);
+            let _ = stdout().flush();
+            stdin().read_line(&mut ip).expect("Did not enter a correct string");
+            if let Some('\n') = ip.chars().next_back() {
+                ip.pop();
+            }
+            if ip_re.is_match(&*ip) {
+                break;
+            }
+            message = "Entered IP is incorrect. Try again: ";
+        }
+    }
+
+    let mut name = String::new();
+    print!("Enter Name: ");
+    let _ = stdout().flush();
+    stdin().read_line(&mut name).expect("Did not enter a correct string");
+    if let Some('\n') = name.chars().next_back() {
+        name.pop();
+    }
+    return (ip, name);
+}
+
+fn parse_ip(ip: String) ->(Vec<u8>, u16) {
+    let re: Regex = Regex::new(r"(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3}):(\d+)").unwrap();
+    let captures = re.captures(&*ip).unwrap();
+    let mut res:Vec<u8> = Vec::new();
+    for i in 1..5 {
+        let nb = captures.get(i).map(|a| a.as_str().parse::<u8>().unwrap());
+        res.push(nb.unwrap());
+    }
+    let port = (captures.get(5).map(|port| port.as_str().parse::<u16>().unwrap())).unwrap();
+    return (res, port);
 }
