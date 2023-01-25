@@ -1,9 +1,10 @@
-use std::{net::{SocketAddr, UdpSocket, SocketAddrV4}, collections::HashMap};
+use std::{net::{SocketAddr, UdpSocket, SocketAddrV4, Ipv4Addr}, collections::HashMap};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use serde_json::*;
 use crate::{player::Player, map::Map};
 
+const BUFFER: usize = 6000;
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Message {
@@ -11,7 +12,7 @@ pub struct Message {
      data: JsonValue,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, Default)]
 pub struct Data {
     pub map: Map,
     pub players: HashMap<SocketAddr, Player>,
@@ -22,10 +23,9 @@ pub struct Client {
     pub socket: UdpSocket,
 }
 
-
 impl Client {
     pub fn new(server_addr: SocketAddr) -> Self {
-        let  socket =  UdpSocket::bind(format!("{}", SocketAddrV4::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0))).expect("ERROR<connect>: bind to address failed");
+        let  socket =  UdpSocket::bind(format!("{}", SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 0))).expect("ERROR<connect>: bind to address failed");
         socket.connect(server_addr).expect("ERROR<connect>: failed to connect with main_server");
         Self {socket}
     } 
@@ -39,7 +39,7 @@ impl Client {
     }
 
     pub fn read_message(&self) -> Data {
-        let mut buf = [0; 24000];
+        let mut buf = [0; BUFFER];
         let (amt, _src) = self.socket.recv_from(&mut buf).expect("ERROR<read>: failed to receive message failed");
         let filled_buf = &mut buf[..amt];
         let incoming_message = String::from_utf8_lossy(filled_buf).into_owned();
