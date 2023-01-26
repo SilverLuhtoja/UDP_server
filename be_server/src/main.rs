@@ -31,9 +31,8 @@ async fn main() -> std::io::Result<()> {
         
         if data.message_type == "connect" {
             println!("CONNECTING WITH  --> {}", src);
-            let multiplier = (players.len() + 1) as f32;
-            let location = Point { x: 100.0 * multiplier, y: 100.0 * multiplier};
-            let player = Player::new(location);
+            let spawn = map.get_spawn().await;
+            let player = Player::new(spawn);
             players.insert(src,player);
         }
 
