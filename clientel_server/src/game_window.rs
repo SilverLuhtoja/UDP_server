@@ -31,26 +31,25 @@ impl GameWindow {
         let horizontal_cubes = board[0].len() as f32;
         let mut cube_size:f32 = get_cube_size(horizontal_cubes);
 
-        let visual_width:f32 = screen_width() - PADDING * 2.0;
-        let visual_height:f32 = screen_height() - PADDING * 3.0 - (board.len() as f32 * cube_size);
-
         Self { 
             minimap: board.clone(),
             minimap_cube_size: cube_size,
-            visual_window_start_x: PADDING,
-            visual_window_start_y: PADDING,
-            visual_window_finish_x: PADDING + visual_width,
-            visual_window_finish_y: PADDING + visual_height,
+
+            minimap_start_x: 0.0,
+            minimap_start_y: 0.0,
+            minimap_finish_x: screen_width() / 4.0,
+            minimap_finish_y: screen_height() / 2.0,
     
-            minimap_start_x: PADDING,
-            minimap_start_y: PADDING * 2.0 + visual_height,
-            minimap_finish_x: screen_width() - PADDING,
-            minimap_finish_y: screen_height() - PADDING,
+            score_board_start_x: 0.0,
+            score_board_start_y: screen_height() - screen_height() / 2.0 + PADDING * 2.0,
+            score_board_finish_x: screen_width() / 4.0,
+            score_board_finish_y: screen_height(),
+
+            visual_window_start_x: screen_width() / 4.0,
+            visual_window_start_y: 0.0,
+            visual_window_finish_x: screen_width(),
+            visual_window_finish_y: screen_height(),
     
-            score_board_start_x: (screen_width() / 4.0)*3.0,
-            score_board_start_y: PADDING * 2.0 + visual_height,
-            score_board_finish_x: screen_width() - PADDING,
-            score_board_finish_y: screen_height() - PADDING,
         }
     }
 
@@ -58,8 +57,8 @@ impl GameWindow {
         draw_rectangle(
             self.minimap_start_x,
             self.minimap_start_y,
-            self.minimap_finish_x / 4.0 - self.minimap_start_x,
-            self.minimap_finish_y - self.minimap_start_y,
+            self.minimap_cube_size * self.minimap[0].len() as f32,
+            self.minimap_cube_size * self.minimap.len() as f32,
             WHITE,
         );
 
@@ -69,8 +68,8 @@ impl GameWindow {
                     1 => {
                         // self.wall_coordinates.push(((j as f32 * self.setup.cube_size) + PADDING, (i as f32 * self.setup.cube_size) + self.setup.center_y_offset*2.0 - PADDING));
                         draw_rectangle(
-                            (j as f32 * self.minimap_cube_size) + self.minimap_start_x,
-                            (i as f32 * self.minimap_cube_size) + self.minimap_start_y,
+                            j as f32 * self.minimap_cube_size,
+                            i as f32 * self.minimap_cube_size,
                             self.minimap_cube_size,
                             self.minimap_cube_size,
                             self.match_color(self.minimap[i][j]),
@@ -98,8 +97,6 @@ impl GameWindow {
         while self.minimap[y][x] != 0 {
             y = gen_range(0, self.minimap.len());
             x = gen_range(0, self.minimap[0].len());
-            println!("X {}", x);
-            println!("Y {}", y);
         }
         return (x, y)
     }
@@ -107,7 +104,6 @@ impl GameWindow {
 
 
 fn get_cube_size(horizontal_cubes: f32) -> f32 {
-    println!("kast {}", horizontal_cubes);
     if horizontal_cubes <= 10.0 {return 30.0} 
     if horizontal_cubes <= 20.0 {return 20.0} 
     if horizontal_cubes <= 30.0 {return 15.0} 

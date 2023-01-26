@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 
 
-use clientel_server::player::{Player, to_radians};
+use clientel_server::player::Player;
 use clientel_server::game_window::GameWindow;
 use clientel_server::score_board::ScoreBoard;
 
@@ -32,19 +32,33 @@ async fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind(format!("{}:{}",ADDR, CLIENT_PORT))?;
     println!("Establishing UDP socket address at : {:?}", socket);
     try_to_connect(&socket); // "fake handshake"
+    // let map: Vec<Vec<i32>> = vec![
+    //     vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    //     vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+    //     vec![1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+    //     vec![1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+    //     vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+    //     vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+    //     vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+    //     vec![7, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+    //     vec![8, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+    //     vec![9, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+    //     vec![10, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+    //     vec![11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    // ];
     let map: Vec<Vec<i32>> = vec![
-        vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1],
-        vec![1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1],
-        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        vec![0, 1, 1, 1, 1, 1, 1, 1],
+        vec![1, 0, 0, 0, 0, 0, 0, 1],
+        vec![2, 0, 1, 1, 0, 1, 1, 1],
+        vec![3, 0, 0, 0, 0, 0, 1, 1],
+        vec![4, 0, 1, 0, 1, 0, 0, 1],
+        vec![5, 0, 1, 0, 1, 0, 1, 1],
+        vec![6, 0, 0, 0, 0, 0, 0, 1],
+        vec![7, 0, 1, 1, 0, 1, 1, 1],
+        vec![8, 0, 0, 0, 0, 0, 1, 1],
+        vec![9, 0, 1, 0, 1, 0, 1, 1],
+        vec![10, 0, 1, 0, 1, 0, 1, 1],
+        vec![11, 1, 1, 1, 1, 1, 1, 1],
     ];;
   
     
@@ -67,27 +81,33 @@ async fn main() -> std::io::Result<()> {
 
         if is_key_down(KeyCode::Left) {
             println!("\nwrite to server:");
-            player.angle -= to_radians(5.0);
+            player.angle -= 0.01;
+            if player.angle < 0.0 {
+                player.angle += (2.0 * PI) as f32;
+            }
             socket.send("Left".as_bytes()).expect("Error on send");
         }
 
         if is_key_down(KeyCode::Right) {
             println!("\nwrite to server:");
-            player.angle += to_radians(5.0);
+            player.angle += 0.01;
+            if player.angle > (2.0 * PI) as f32 {
+                player.angle -= (2.0 * PI) as f32;
+            }
             socket.send("Right".as_bytes()).expect("Error on send");
         }
 
         if is_key_down(KeyCode::Up) {
             println!("\nwrite to server:");
             player.speed = 0.5;
-            player.move_player(game_window.clone());
+            player.step();
             socket.send("Up".as_bytes()).expect("Error on send");
         }
 
         if is_key_down(KeyCode::Down) {
             println!("\nwrite to server:");
             player.speed = -0.5;
-            player.move_player(game_window.clone());
+            player.step();
             socket.send("Down".as_bytes()).expect("Error on send");
         }
 
@@ -96,25 +116,12 @@ async fn main() -> std::io::Result<()> {
             socket.send("Shoot".as_bytes()).expect("Error on send");
         }
 
-        // let stdin = io::stdin();
-        // for line in stdin.lock().lines() {
-        //     let line = line.unwrap();
-        //     if &line == "BYE" || &line == "bye" {
-        //         socket.send("stop".as_bytes()).expect("Error on send");
-        //         break;
-        //     }
-        //     socket.send(line.as_bytes()).expect("Error on send");
-        //     read_incoming_messages(&socket);
-        // }
-
         if is_key_pressed(KeyCode::Escape) {
             break;
         }
-      
-        player.display_room(game_window.clone());
         game_window.draw();
         score_board.draw();
-        player.draw();
+        player.draw(game_window.clone());
 
         next_frame().await
     }

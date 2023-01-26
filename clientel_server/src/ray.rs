@@ -17,23 +17,24 @@ impl Ray {
         let vertical_collision_ray:Ray = Ray::get_vertical_collision(angle, game_window.clone(), player_x, player_y);
         let horizontal_collision_ray = Ray::get_horizontal_collision(angle, game_window.clone(), player_x, player_y);
         if horizontal_collision_ray.distance >= vertical_collision_ray.distance {
-            return vertical_collision_ray
+            return vertical_collision_ray;
         }
         horizontal_collision_ray
     }
     
     pub fn get_vertical_collision(angle:f32, game_window: GameWindow, player_x:f32, player_y:f32) -> Ray{
-        let right:bool = (round::floor((angle as f64 - PI/2.0) / PI , 2) % 2.0 ).abs() > 1.0;
-        // println!("FACING RIGHT? {}, angle {}", right, (round::floor((angle as f64 - PI/2.0) / PI , 2) % 2.0 ).abs());
+        let left: bool = (PI * 3.0) / 2.0 > angle as f64 && angle as f64 > PI / 2.0;
+        let right:bool = !left;
+        // println!("FACING right? {}, angle {}", right, angle);
     
         let mut first_x: f32 = 0.0;
         let mut horizontal_step:f32 = 0.0;
         if right {
             horizontal_step = game_window.minimap_cube_size;
-            first_x = round::floor((player_x / game_window.minimap_cube_size) as f64, 2) as f32 * game_window.minimap_cube_size + game_window.minimap_cube_size;
+            first_x = round::floor((player_x / game_window.minimap_cube_size) as f64, 0) as f32 * game_window.minimap_cube_size + game_window.minimap_cube_size;
         } else {
             horizontal_step = -game_window.minimap_cube_size;
-            first_x = round::floor((player_x / game_window.minimap_cube_size) as f64, 2) as f32 * game_window.minimap_cube_size;
+            first_x = round::floor((player_x / game_window.minimap_cube_size) as f64, 0) as f32 * game_window.minimap_cube_size;
         }
 
         let first_y:f32 = round::floor((player_y + (first_x - player_x) * angle.tan()) as f64, 0) as f32;
@@ -52,8 +53,8 @@ impl Ray {
             } else {
                 cell_x = round::floor((next_x / game_window.minimap_cube_size) as f64, 0) as f32 - 1.0;
             }
-            let cell_y:f32 = round::floor(((next_y - game_window.minimap_start_y) / game_window.minimap_cube_size) as f64, 0) as f32;
-
+            let cell_y:f32 = round::floor((next_y / game_window.minimap_cube_size) as f64, 0) as f32;
+            // println!("---------------PLAYER POSITION x: {}, y: {}", player_x , player_y);
             // println!( "cell POSITION: {}, {}", cell_x, cell_y);
             if game_window.out_of_map_bounce(cell_x, cell_y){
                 break;
@@ -61,9 +62,8 @@ impl Ray {
             wall = game_window.minimap[cell_y as usize][cell_x as usize];
             // println!( "wall: {} {:?}", wall, game_window.minimap[cell_y as usize]);
             if wall == 0 {
-                
-                next_x += round::floor(vertical_step as f64, 0) as f32;
-                next_y += round::floor(horizontal_step as f64, 0) as f32;
+                next_x += horizontal_step;
+                next_y += vertical_step;
                 // println!( "GOING NEXT ROUND: next_x {} next_y {}", next_x, next_y);
             }
         }
@@ -74,17 +74,18 @@ impl Ray {
     }
 
     pub fn get_horizontal_collision(angle:f32, game_window: GameWindow, player_x:f32, player_y:f32) -> Ray{
-        let up:bool = (round::floor(angle as f64 / PI , 2) % 2.0 ).abs() >= 1.0;
-        // println!("FACING up? {}, angle {}", up, (round::floor(angle as f64 / PI , 2) % 2.0 ).abs());
+        let down:bool = angle > 0.0 &&  angle < PI as f32;
+        let up: bool = !down;
+        // println!("FACING uKp? {}, angle {}", up, angle);
     
         let mut first_y: f32 = 0.0;
         let mut vertical_step:f32 = 0.0;
         if up {
             vertical_step = -game_window.minimap_cube_size;
-            first_y = round::floor((player_y / game_window.minimap_cube_size) as f64, 2) as f32 * game_window.minimap_cube_size;
+            first_y = round::floor((player_y / game_window.minimap_cube_size) as f64, 0) as f32 * game_window.minimap_cube_size;
         } else {
             vertical_step = game_window.minimap_cube_size;
-            first_y = round::floor((player_y / game_window.minimap_cube_size) as f64, 2) as f32 * game_window.minimap_cube_size + game_window.minimap_cube_size;
+            first_y = round::floor((player_y / game_window.minimap_cube_size) as f64, 0) as f32 * game_window.minimap_cube_size + game_window.minimap_cube_size;
         }
 
         let first_x = round::floor((player_x + (first_y - player_y) / angle.tan()) as f64, 0) as f32;
@@ -94,27 +95,27 @@ impl Ray {
         let mut wall:i32 = 0;
         let mut next_x = first_x as f32;
         let mut next_y = first_y as f32;
-
         // println!( "vertical_step {}, horizontal_step {}", vertical_step, horizontal_step);
         // println!( "playerX {}, playerY {},  next_x {}, next_y: {}", player_x, player_y, next_x, next_y);
         while wall == 0{
             let mut cell_y:f32 = 0.0;
-            let mut cell_x:f32 = round::floor((next_x/ game_window.minimap_cube_size) as f64, 0) as f32;
+            let mut cell_x:f32 = round::floor((next_x / game_window.minimap_cube_size) as f64, 0) as f32;
+
             if up {
-                cell_y = round::floor(((next_y - game_window.minimap_start_y)/ game_window.minimap_cube_size) as f64, 0) as f32 - 1.0;
+                cell_y = round::floor((next_y / game_window.minimap_cube_size) as f64, 0) as f32 - 1.0;
             } else{
-                cell_y = round::floor(((next_y - game_window.minimap_start_y)/ game_window.minimap_cube_size) as f64, 0) as f32;
+                cell_y = round::floor((next_y / game_window.minimap_cube_size) as f64, 0) as f32;
             }
-            //  println!( "cell POSITION: {}, {}", cell_x, cell_y);
+            // println!("---------------PLAYER POSITION x: {}, y: {}", (player_x - game_window.minimap_cube_size/2.0 - game_window.minimap_start_x) / game_window.minimap_cube_size , (player_y - game_window.minimap_cube_size/2.0 - game_window.minimap_start_y) / game_window.minimap_cube_size);
+            // println!( "cell POSITION: {}, {}", cell_x, cell_y);
             if game_window.out_of_map_bounce(cell_x, cell_y){
                 break;
             }
             wall = game_window.minimap[cell_y as usize][cell_x as usize];
             // println!( "wall: {} {:?}", wall, game_window.minimap[cell_y as usize]);
             if wall == 0 {
-                    
-                next_x += round::floor(vertical_step as f64, 0) as f32;
-                next_y += round::floor(horizontal_step as f64, 0) as f32;
+                next_x += horizontal_step;
+                next_y += vertical_step;
                 // println!( "GOING NEXT ROUND: next_x {} next_y {}", next_x, next_y);
             }
         }
