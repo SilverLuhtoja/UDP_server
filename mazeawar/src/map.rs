@@ -19,8 +19,8 @@ impl Map {
         self.0.len()
     }
     pub fn draw(&self) {
-        let offset: f32 = 300.0;
-        let size: f32 = 10.0;
+        let offset: f32 = 0.0;
+        let size: f32 = 20.0;
         for i in 0..self.height() {
             for j in 0..self.width() {
                 if self.0[i][j] == WALL {
