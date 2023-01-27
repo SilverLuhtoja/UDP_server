@@ -18,6 +18,7 @@ mod client_server;
 mod map;
 mod maze;
 mod player;
+mod utils;
 
 fn window_conf() -> Conf {
     Conf {
@@ -28,12 +29,21 @@ fn window_conf() -> Conf {
     }
 }
 
+pub enum InputType {
+    Ip,
+    Name,
+}
+
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
-    let (input_ip, user_name) = get_user_data();
-    let (addr, port) = parse_ip(input_ip);
+    //add user input for server ip and user name
+    // let input_ip = get_user_input("Enter IP address: ".to_string(), InputType::Ip);
+    // let server_addr = utils::convert::to_ip(input_ip);
+    // let user_name = get_user_input("Enter Name:  ".to_string(), InputType::Name);
 
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(addr[0], addr[1], addr[2], addr[3])), port);
+    //to test this has to be changed to local ip address
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 0, 57)), 4242);
+
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
     let receiver_clone = sender_clone.clone();
@@ -41,7 +51,7 @@ async fn main() -> std::io::Result<()> {
 
     thread::spawn(move || {
         receiver_clone.send_message("connect", json!(""));
-        loop{
+        loop {
             let received_data = receiver_clone.read_message();
             tx.send(received_data).unwrap()
         }
@@ -56,7 +66,7 @@ async fn main() -> std::io::Result<()> {
         }
         data.map.draw();
         for (src, player) in &data.players {
-            if src.to_string() == sender_clone.get_address().to_string(){
+            if src.to_string() == sender_clone.get_address().to_string() {
                 my_point = player.location
             }
             player.draw();
@@ -64,14 +74,14 @@ async fn main() -> std::io::Result<()> {
 
         listen_move_events(&my_point, &sender_clone);
         if is_key_pressed(KeyCode::Escape) {
-            sender_clone.send_message("I QUIT",  json!(""));
+            sender_clone.send_message("I QUIT", json!(""));
             exit(1)
         }
         next_frame().await;
     }
 }
 
-pub fn listen_move_events(my_point: &Point, client: &Client){
+pub fn listen_move_events(my_point: &Point, client: &Client) {
     let mut point = Point::zero();
     if is_key_pressed(KeyCode::A) {
         point = Point::new(my_point.x - 20.0, my_point.y);
@@ -85,51 +95,32 @@ pub fn listen_move_events(my_point: &Point, client: &Client){
     if is_key_pressed(KeyCode::S) {
         point = Point::new(my_point.x, my_point.y + 20.0);
     }
-    if point.is_moved(){
+    if point.is_moved() {
         client.send_message("movement", json!(point))
     }
 }
 
-fn get_user_data()-> (String, String) {
+fn get_user_input(mut message: String, input_type: InputType) -> String {
     use std::io::{stdin, stdout, Write};
-    let ip_re = Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+").unwrap();
-    let mut ip = String::new();
-    let mut message = "Enter IP Address: ";
-
-    if !ip_re.is_match(&*ip) {
-        loop {
-            ip = String::new();
-            print!("{}", message);
-            let _ = stdout().flush();
-            stdin().read_line(&mut ip).expect("Did not enter a correct string");
-            if let Some('\n') = ip.chars().next_back() {
-                ip.pop();
+    let mut input = String::new();
+    loop {
+        input = String::new();
+        print!("{}", message);
+        let _ = stdout().flush();
+        stdin().read_line(&mut input).expect("Did not enter a correct string");
+        if let Some('\n') = input.chars().next_back() {
+            input.pop();
+        }
+        match input_type {
+            InputType::Ip => {
+                if utils::validate::ip(input.clone()) { break; }
+                message = "Entered IP is incorrect. Try again: ".to_string();
             }
-            if ip_re.is_match(&*ip) {
-                break;
+            InputType::Name => {
+                if utils::validate::user_name(input.clone()) { break; }
+                message = "Entered name is too short. Try again: ".to_string();
             }
-            message = "Entered IP is incorrect. Try again: ";
         }
     }
-
-    let mut name = String::new();
-    print!("Enter Name: ");
-    let _ = stdout().flush();
-    stdin().read_line(&mut name).expect("Did not enter a correct string");
-    if let Some('\n') = name.chars().next_back() {
-        name.pop();
-    }
-    return (ip, name);
-}
-
-fn parse_ip(ip: String) ->(Vec<u8>, u16) {
-    let re: Regex = Regex::new(r"(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3}):(\d+)").unwrap();
-    let captures = re.captures(&*ip).unwrap();
-    let mut res:Vec<u8> = Vec::new();
-    for i in 1..5 {
-        let nb = captures.get(i).map(|a| a.as_str().parse::<u8>().unwrap());
-        res.push(nb.unwrap());
-    }
-    let port = (captures.get(5).map(|port| port.as_str().parse::<u16>().unwrap())).unwrap();
-    return (res, port);
+    return input;
 }
