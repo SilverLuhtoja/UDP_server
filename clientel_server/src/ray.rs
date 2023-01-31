@@ -37,8 +37,8 @@ impl Ray {
             first_x = round::floor((player_x / game_window.minimap_cube_size) as f64, 0) as f32 * game_window.minimap_cube_size;
         }
 
-        let first_y:f32 = round::floor((player_y + (first_x - player_x) * angle.tan()) as f64, 0) as f32;
-        let vertical_step:f32 = round::floor((horizontal_step * angle.tan()) as f64, 0) as f32;
+        let first_y:f32 = player_y + (first_x - player_x) * angle.tan();
+        let vertical_step:f32 = horizontal_step * angle.tan();
       
 
         let mut wall:i32 = 0;
@@ -76,20 +76,20 @@ impl Ray {
     pub fn get_horizontal_collision(angle:f32, game_window: GameWindow, player_x:f32, player_y:f32) -> Ray{
         let down:bool = angle > 0.0 &&  angle < PI as f32;
         let up: bool = !down;
-        // println!("FACING uKp? {}, angle {}", up, angle);
+        // println!("FACING ? {}, angle {}", up, angle);
     
         let mut first_y: f32 = 0.0;
         let mut vertical_step:f32 = 0.0;
         if up {
             vertical_step = -game_window.minimap_cube_size;
-            first_y = round::floor((player_y / game_window.minimap_cube_size) as f64, 0) as f32 * game_window.minimap_cube_size;
+            first_y = round::floor((player_y / game_window.minimap_cube_size - 0.000001) as f64, 0) as f32 * game_window.minimap_cube_size;
         } else {
             vertical_step = game_window.minimap_cube_size;
             first_y = round::floor((player_y / game_window.minimap_cube_size) as f64, 0) as f32 * game_window.minimap_cube_size + game_window.minimap_cube_size;
         }
 
-        let first_x = round::floor((player_x + (first_y - player_y) / angle.tan()) as f64, 0) as f32;
-        let horizontal_step = round::floor((vertical_step / angle.tan())as f64, 0) as f32;
+        let first_x = player_x + (first_y - player_y) / angle.tan();
+        let horizontal_step = vertical_step / angle.tan();
 
 
         let mut wall:i32 = 0;
@@ -126,5 +126,8 @@ impl Ray {
 }
 
 pub fn distance(x1: f32, y1:f32, x2:f32, y2:f32) -> f32 {
+    // let delta_x = x2 - x1;
+	// let delta_y = y2 - y1;
     ((x2-x1).powi(2) + (y2-y1).powi(2)).sqrt()
+    // (delta_x * delta_x + delta_y * delta_y).sqrt()
 }

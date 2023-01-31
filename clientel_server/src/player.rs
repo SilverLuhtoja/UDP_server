@@ -69,7 +69,8 @@ impl Player {
     pub fn get_rays(&self, game_window: GameWindow) -> Vec<Ray> {
         // println!("         GET RAYS, player angle {}", self.angle);
         let initial_angle = self.angle - FOV/2.0;
-        let number_of_rays:f32 = screen_width();
+        let number_of_rays:f32 = screen_width() - game_window.visual_window_start_x;
+        // let number_of_rays:f32 = 5.0;
         // println!(" number_of_rays {}", number_of_rays);
         let angle_step:f32 = FOV / number_of_rays;
         // println!(" angle_step {}", angle_step);
