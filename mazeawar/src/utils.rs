@@ -1,22 +1,50 @@
-pub mod validate {
-    use regex::Regex;
-
-    pub fn user_name(name: String) -> bool {
-        if name.len() < 1 { return false; };
-        return true;
-    }
-
-    pub fn ip(input: String) -> bool {
-        let ip_re = Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+").unwrap();
-        if !ip_re.is_match(input.as_str()) { return false; };
-        return true;
-    }
-}
-
 pub mod convert {
     use std::net::{SocketAddr, ToSocketAddrs};
 
     pub fn to_ip(input: String) -> SocketAddr {
         return input.to_socket_addrs().unwrap().as_slice()[0];
+    }
+}
+
+pub mod input {
+    use regex::Regex;
+
+    pub enum InputType {
+        Ip,
+        Name,
+    }
+
+    pub fn read(mut message: String, input_type: InputType) -> String {
+        use std::io::{stdin, stdout, Write};
+        let mut input = String::new();
+        loop {
+            input = String::new();
+            print!("{}", message);
+            let _ = stdout().flush();
+            stdin().read_line(&mut input).expect("Did not enter a correct string");
+            if let Some('\n') = input.chars().next_back() {
+                input.pop();
+            }
+            match input_type {
+                InputType::Ip => {
+                    if validate_ip(input.clone()) { break; }
+                    message = "Entered IP is incorrect. Try again: ".to_string();
+                }
+                InputType::Name => {
+                    if validate_user_name(input.clone()) { break; }
+                    message = "Entered name is too short. Try again: ".to_string();
+                }
+            }
+        }
+        return input;
+    }
+
+    fn validate_user_name(name: String) -> bool {
+        return name.len() > 1;
+    }
+
+    fn validate_ip(input: String) -> bool {
+        let ip_re = Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+").unwrap();
+        return ip_re.is_match(input.as_str());
     }
 }

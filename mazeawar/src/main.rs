@@ -2,6 +2,7 @@
 // #![allow(unused_imports)]
 // #![allow(unused_variables)]
 
+use std::fs::read;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::process::exit;
 use std::sync::Arc;
@@ -13,6 +14,7 @@ use regex::Regex;
 
 use crate::client_server::*;
 use crate::player::*;
+use crate::utils::*;
 
 mod client_server;
 mod map;
@@ -29,18 +31,15 @@ fn window_conf() -> Conf {
     }
 }
 
-pub enum InputType {
-    Ip,
-    Name,
-}
-
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
+    //option for prod
     //add user input for server ip and user name
-    // let input_ip = get_user_input("Enter IP address: ".to_string(), InputType::Ip);
-    // let server_addr = utils::convert::to_ip(input_ip);
-    // let user_name = get_user_input("Enter Name:  ".to_string(), InputType::Name);
+    // let input_ip = input::read("Enter IP address: ".to_string(), input::InputType::Ip);
+    // let server_addr = convert::to_ip(input_ip);
+    // let user_name = input::read("Enter Name:  ".to_string(), input::InputType::Name);
 
+    //option for tests
     //to test this has to be changed to local ip address
     let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 0, 57)), 4242);
 
@@ -100,27 +99,3 @@ pub fn listen_move_events(my_point: &Point, client: &Client) {
     }
 }
 
-fn get_user_input(mut message: String, input_type: InputType) -> String {
-    use std::io::{stdin, stdout, Write};
-    let mut input = String::new();
-    loop {
-        input = String::new();
-        print!("{}", message);
-        let _ = stdout().flush();
-        stdin().read_line(&mut input).expect("Did not enter a correct string");
-        if let Some('\n') = input.chars().next_back() {
-            input.pop();
-        }
-        match input_type {
-            InputType::Ip => {
-                if utils::validate::ip(input.clone()) { break; }
-                message = "Entered IP is incorrect. Try again: ".to_string();
-            }
-            InputType::Name => {
-                if utils::validate::user_name(input.clone()) { break; }
-                message = "Entered name is too short. Try again: ".to_string();
-            }
-        }
-    }
-    return input;
-}
