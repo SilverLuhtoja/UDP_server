@@ -59,14 +59,17 @@ impl Player{
         let mut player_color:macroquad::color::Color = RED;
         if me{
             player_color = GREEN;
-            //Draw rays from player
+    
+            //line to separate map and visual
+            draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
+            
+            // Draw rays from player on minimap and visual part
             for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
                 //on minimap
                 let start_x:f32 = self.location.x+ BOX_SIZE /2.0;
                 let start_y:f32 = self.location.y+ BOX_SIZE /2.0;
                 let player_angle:f32 = get_angle(self.looking_at);
-
-                draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, YELLOW);
+                draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
 
                 //visual part:
                 let distance:f32 = fix_fish_eye(ray.distance, ray.angle, player_angle);
@@ -78,7 +81,7 @@ impl Player{
                 //wall
                 draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 - wall_height/2.0, 1.0, wall_height, wall_color);
                 //floor
-                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 + wall_height/2.0, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, YELLOW);
+                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 + wall_height/2.0, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, BEIGE);
                 //ceiling
                 draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, WHITE);
             }
@@ -125,13 +128,33 @@ impl Player{
             Direction::RIGHT => self.looking_at = Direction::DOWN,
         }
     }
-    pub fn step(&mut self, step: f32){
+    pub fn step(&mut self, step: f32, map: Vec<Vec<i32>>){
+        let mut new_point: Point = self.location.clone();
         match self.looking_at {
-            Direction::LEFT => self.location.x -=step,
-            Direction::RIGHT => self.location.x +=step,
-            Direction::UP => self.location.y -=step,
-            Direction::DOWN => self.location.y +=step,
-            _ => (),
+            Direction::LEFT => {
+                new_point.x -= step;
+                if can_step(new_point, map){
+                    self.location.x -=step
+                }
+            },
+            Direction::RIGHT => {
+                new_point.x += step;
+                if can_step(new_point, map){
+                    self.location.x +=step
+                }
+            }
+            Direction::UP => {
+                new_point.y -= step;
+                if can_step(new_point, map){
+                    self.location.y -=step
+                }
+            }
+            Direction::DOWN => {
+                new_point.y += step;
+                if can_step(new_point, map){
+                    self.location.y +=step
+                }
+            }
         }
     }
 
@@ -169,4 +192,10 @@ pub fn get_angle(direction: Direction) -> f32 {
 pub fn fix_fish_eye(distance: f32, angle: f32, player_angle: f32) -> f32 {
     let diff = angle - player_angle;
     return distance * diff.cos();
+}
+
+pub fn can_step(new_location: Point, map: Vec<Vec<i32>>)-> bool {
+    let x = new_location.x / BOX_SIZE;
+    let y = new_location.y / BOX_SIZE;
+    return map[y as usize][x as usize] == 0;
 }
