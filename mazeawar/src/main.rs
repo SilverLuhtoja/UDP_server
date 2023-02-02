@@ -12,6 +12,7 @@ use macroquad::prelude::*;
 use serde_json::*;
 use regex::Regex;
 use std::collections::HashMap;
+use macroquad::time::get_fps;
 
 use crate::client_server::*;
 use crate::player::*;
@@ -76,16 +77,17 @@ async fn main() -> std::io::Result<()> {
             }
         }
 
-        listen_move_events(&sender_clone, me);
+        listen_move_events(&sender_clone, me, data.map.0.clone());
         if is_key_pressed(KeyCode::Escape) {
             sender_clone.send_message("I QUIT", json!(""));
             exit(1)
         }
+        draw_text(&format!("FPS: {}", get_fps()), screen_width() - 200.0, 30.0, 25.0, BLACK);
         next_frame().await;
     }
 }
 
-pub fn listen_move_events(client: &Client, mut me: Player) {
+pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>) {
     let mut action:bool = false;
     if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
         me.turn_left();
@@ -96,23 +98,18 @@ pub fn listen_move_events(client: &Client, mut me: Player) {
         action = true;
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up){
-        me.step(20.0);
+        me.step(20.0, map.clone());
         action = true;
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down){
-        me.step(-20.0);
+        me.step(-20.0, map.clone());
         action = true;
     }
     if is_key_pressed(KeyCode::Space) {
         action = true;
     }
     if action {
-        client.send_message("movement", json!({
-            "location": me.location,
-            "looking_at": me.looking_at,
-            "username": me.username,
-            "score": me.score,
-        }))
+        client.send_message("movement", json!(me))
     }
 }
 
