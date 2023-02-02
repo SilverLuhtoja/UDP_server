@@ -3,3 +3,5 @@ FRONT:
 - выстрел и как его визуально оформить VALERIA
 - как показывать противников  визуально ANNA
 - fps OK
+- username request
+- sort scoreboard players

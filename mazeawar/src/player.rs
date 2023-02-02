@@ -5,7 +5,6 @@ use crate::ray::*;
 use crate::map::*;
 
 const FOV:f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)-> to_radians(60.0)
-// RAD = (deg * PI as f32) / 180.0
 
 #[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum  Direction {
@@ -58,8 +57,9 @@ impl Player{
     pub fn draw(&self, me: bool, game_window: GameWindow, map: Map){
         let mut player_color:macroquad::color::Color = RED;
         if me{
+            //player color on the minimap
             player_color = GREEN;
-    
+
             //line to separate map and visual
             draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
             
@@ -133,40 +133,28 @@ impl Player{
         match self.looking_at {
             Direction::LEFT => {
                 new_point.x -= step;
-                if can_step(new_point, map){
-                    self.location.x -=step
-                }
             },
             Direction::RIGHT => {
                 new_point.x += step;
-                if can_step(new_point, map){
-                    self.location.x +=step
-                }
             }
             Direction::UP => {
                 new_point.y -= step;
-                if can_step(new_point, map){
-                    self.location.y -=step
-                }
             }
             Direction::DOWN => {
                 new_point.y += step;
-                if can_step(new_point, map){
-                    self.location.y +=step
-                }
             }
+        }
+        if can_step(new_point, map){
+            self.location = new_point;
         }
     }
 
+    /* Get 60degree FOV (field of view) rays from player position */
     pub fn get_rays(&self, visual_window_start_x:f32, map: Map) -> Vec<Ray> {
-        // println!("         GET RAYS, player angle {}", self.angle);
         let player_angle:f32 = get_angle(self.looking_at);
         let initial_angle = player_angle - FOV/2.0;
         let number_of_rays:f32 = screen_width() - visual_window_start_x;
-        // let number_of_rays:f32 = 5.0;
-        // println!(" number_of_rays {}", number_of_rays);
         let angle_step:f32 = FOV / number_of_rays;
-        // println!(" angle_step {}", angle_step);
         let mut result: Vec<Ray> = Vec::new();
         let mut i = 0;
         while i < number_of_rays as i32 {
@@ -175,11 +163,10 @@ impl Player{
             result.push(one_ray);
             i += 1;
         }
-        // println!(" result {:?}", result[0].distance);
         return result;
     }
 }
-
+/*get radians from direction*/
 pub fn get_angle(direction: Direction) -> f32 {
     match direction {
         Direction::LEFT => 3.14,
@@ -194,6 +181,7 @@ pub fn fix_fish_eye(distance: f32, angle: f32, player_angle: f32) -> f32 {
     return distance * diff.cos();
 }
 
+/*Check collision with walls*/
 pub fn can_step(new_location: Point, map: Vec<Vec<i32>>)-> bool {
     let x = new_location.x / BOX_SIZE;
     let y = new_location.y / BOX_SIZE;
