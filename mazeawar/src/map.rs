@@ -29,6 +29,7 @@ impl Map {
         let mut game_window: GameWindow = GameWindow::new();
         let offset: f32 = 0.0;
         let size: f32 = 20.0;
+        //Draw minimap
         for i in 0..self.height() {
             for j in 0..self.width() {
                 if self.0[i][j] == WALL {
@@ -46,16 +47,19 @@ impl Map {
         game_window.score_board_start_y = game_window.minimap_finish_y + BOX_SIZE;
         game_window.score_board_finish_x = game_window.minimap_finish_x + BOX_SIZE;
 
+        //draw scoreboard
         let score_board = ScoreBoard::new(game_window.clone(), players.clone());
         score_board.draw();
         return game_window;
     }
+
     pub fn out_of_map_bounce(&self, x: f32, y: f32) ->bool {
         x < 0.0 || x >= self.width() as f32 || y < 0.0 || y >= self.height() as f32
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize,Default)]
+/*Used to set-up visual part*/
 pub struct GameWindow{
     pub minimap_start_x: f32,
     pub minimap_start_y:f32,
@@ -118,7 +122,7 @@ impl ScoreBoard{
         }
     }
     pub fn draw(&self) {
-        //TODO -> If players are more then 10 -> all scores to be seen -> TODO!!!!
+        //TODO -> SORT PLAYERS
         draw_rectangle(
             self.start_x,
             self.start_y,
