@@ -15,7 +15,6 @@ use std::net::SocketAddr;
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let server= Server::new().await;
-
     let mut grid = Grid::new(10, 10, LOW);
     grid.generate_maze();
     let map = grid.convert_to_map();
@@ -38,8 +37,8 @@ async fn main() -> std::io::Result<()> {
 
         if data.message_type == "movement" {
             let current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
-            let point:Point = serde_json::from_value(data.data)?;
-            current_player.location = point;
+            let player:Player = serde_json::from_value(data.data)?;
+            *current_player = player;
         }
         
         message.players = players.clone();
@@ -48,3 +47,4 @@ async fn main() -> std::io::Result<()> {
         }
     }
 }
+

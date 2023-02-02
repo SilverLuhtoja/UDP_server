@@ -11,22 +11,24 @@ use std::thread;
 use macroquad::prelude::*;
 use serde_json::*;
 use regex::Regex;
+use std::collections::HashMap;
 
 use crate::client_server::*;
 use crate::player::*;
 use crate::utils::*;
+use crate::map::GameWindow;
 
 mod client_server;
 mod map;
 mod maze;
 mod player;
 mod utils;
+mod ray;
 
 fn window_conf() -> Conf {
     Conf {
         window_title: "MAZE".to_owned(),
-        window_height: 800,
-        window_resizable: false,
+        fullscreen: true,
         ..Default::default()
     }
 }
@@ -41,7 +43,7 @@ async fn main() -> std::io::Result<()> {
 
     //option for tests
     //to test this has to be changed to local ip address
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 0, 57)), 4242);
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
@@ -63,15 +65,18 @@ async fn main() -> std::io::Result<()> {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
         }
-        data.map.draw();
+        let game_window: GameWindow = data.map.draw(&data.players);
+        let mut me = Player::new(my_point);
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string() {
-                my_point = player.location
+                me = player.clone();
+                player.draw(true, game_window.clone(), data.map.clone());
+            } else{
+                player.draw(false, game_window.clone(), data.map.clone());
             }
-            player.draw();
         }
 
-        listen_move_events(&my_point, &sender_clone);
+        listen_move_events(&sender_clone, me);
         if is_key_pressed(KeyCode::Escape) {
             sender_clone.send_message("I QUIT", json!(""));
             exit(1)
@@ -80,22 +85,34 @@ async fn main() -> std::io::Result<()> {
     }
 }
 
-pub fn listen_move_events(my_point: &Point, client: &Client) {
-    let mut point = Point::zero();
-    if is_key_pressed(KeyCode::A) {
-        point = Point::new(my_point.x - 20.0, my_point.y);
+pub fn listen_move_events(client: &Client, mut me: Player) {
+    let mut action:bool = false;
+    if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
+        me.turn_left();
+        action = true;
     }
-    if is_key_pressed(KeyCode::D) {
-        point = Point::new(my_point.x + 20.0, my_point.y);
+    if is_key_pressed(KeyCode::D) || is_key_pressed(KeyCode::Right) {
+        me.turn_right();
+        action = true;
     }
-    if is_key_pressed(KeyCode::W) {
-        point = Point::new(my_point.x, my_point.y - 20.0);
+    if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up){
+        me.step(20.0);
+        action = true;
     }
-    if is_key_pressed(KeyCode::S) {
-        point = Point::new(my_point.x, my_point.y + 20.0);
+    if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down){
+        me.step(-20.0);
+        action = true;
     }
-    if point.is_moved() {
-        client.send_message("movement", json!(point))
+    if is_key_pressed(KeyCode::Space) {
+        action = true;
+    }
+    if action {
+        client.send_message("movement", json!({
+            "location": me.location,
+            "looking_at": me.looking_at,
+            "username": me.username,
+            "score": me.score,
+        }))
     }
 }
 

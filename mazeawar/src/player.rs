@@ -1,6 +1,12 @@
 use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::ray::*;
+use crate::map::*;
+
+const FOV:f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)-> to_radians(60.0)
+// RAD = (deg * PI as f32) / 180.0
+
 #[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum  Direction {
     UP,
@@ -15,10 +21,12 @@ pub struct Point{
     pub y: f32
 }
 
-#[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Player{
     pub location: Point,
-    pub looking_at:  Direction
+    pub looking_at:  Direction,
+    pub username: String,
+    pub score: i32,
 }
 
 impl Point {
@@ -35,29 +43,59 @@ impl Point {
     }
 }
 
-const BOX_SIZE:f32 = 20.0;
+pub const BOX_SIZE:f32 = 20.0;
 
-impl Player {
+impl Player{
     pub fn new(location: Point) -> Self {
         Self{
             location,
-            looking_at: Direction::UP
+            looking_at: Direction::UP,
+            username: "default name".to_string(),
+            score: 15,
         }        
     }
 
-    pub fn draw(&self){
-        draw_rectangle(self.location.x , self.location.y, BOX_SIZE,  BOX_SIZE,  GREEN);
-        self.draw_facing_indicator()
+    pub fn draw(&self, me: bool, game_window: GameWindow, map: Map){
+        let mut player_color:macroquad::color::Color = RED;
+        if me{
+            player_color = GREEN;
+            //Draw rays from player
+            for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
+                //on minimap
+                let start_x:f32 = self.location.x+ BOX_SIZE /2.0;
+                let start_y:f32 = self.location.y+ BOX_SIZE /2.0;
+                let player_angle:f32 = get_angle(self.looking_at);
+
+                draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, YELLOW);
+
+                //visual part:
+                let distance:f32 = fix_fish_eye(ray.distance, ray.angle, player_angle);
+                let wall_height:f32 = ((BOX_SIZE * 5.0) / distance) *70.0;
+                let mut wall_color:macroquad::color::Color = LIGHTGRAY;
+                if ray.vertical {
+                    wall_color = GRAY;
+                }
+                //wall
+                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 - wall_height/2.0, 1.0, wall_height, wall_color);
+                //floor
+                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 + wall_height/2.0, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, YELLOW);
+                //ceiling
+                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, WHITE);
+            }
+        }
+        //draw player on the minimap
+        draw_circle(self.location.x + BOX_SIZE /2.0, self.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, player_color);
+        self.draw_facing_indicator();
+
     }
 
     pub fn draw_facing_indicator(&self){
-        draw_rectangle(self.location.x , self.location.y, BOX_SIZE,  BOX_SIZE,  GREEN);
         let middle_offset:f32 = 7.5;
         match self.looking_at {
-            Direction::UP => draw_rectangle(self.location.x + middle_offset ,self.get_center_y() - BOX_SIZE, 5.0,  5.0,  RED),
-            Direction::DOWN => draw_rectangle(self.location.x + middle_offset , self.get_center_y() + BOX_SIZE, 5.0,  5.0,  RED),
-            Direction::LEFT => draw_rectangle(self.get_center_x() - BOX_SIZE , self.location.y + middle_offset, 5.0,  5.0,  RED),
-            Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE , self.location.y + middle_offset, 5.0,  5.0,  RED)
+            Direction::UP => draw_rectangle(self.location.x + middle_offset ,self.get_center_y() - BOX_SIZE /2.0, 5.0,  5.0,  RED),
+            Direction::DOWN => draw_rectangle(self.location.x + middle_offset , self.get_center_y() + BOX_SIZE/2.0, 5.0,  5.0,  RED),
+            Direction::LEFT => draw_rectangle(self.get_center_x() - BOX_SIZE/2.0 , self.location.y + middle_offset, 5.0,  5.0,  RED),
+            Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE/2.0 , self.location.y + middle_offset, 5.0,  5.0,  RED)
         }
     }
 
@@ -70,4 +108,65 @@ impl Player {
     pub fn get_center_y(&self) -> f32{
         self.location.y + BOX_SIZE/2.0
     }
+
+    pub fn turn_left(&mut self) {
+        match self.looking_at {
+            Direction::UP => self.looking_at = Direction::LEFT,
+            Direction::DOWN => self.looking_at = Direction::RIGHT,
+            Direction::LEFT => self.looking_at = Direction::DOWN,
+            Direction::RIGHT => self.looking_at = Direction::UP,
+        }
+    }
+    pub fn turn_right(&mut self) {
+        match self.looking_at {
+            Direction::UP => self.looking_at = Direction::RIGHT,
+            Direction::DOWN => self.looking_at = Direction::LEFT,
+            Direction::LEFT => self.looking_at = Direction::UP,
+            Direction::RIGHT => self.looking_at = Direction::DOWN,
+        }
+    }
+    pub fn step(&mut self, step: f32){
+        match self.looking_at {
+            Direction::LEFT => self.location.x -=step,
+            Direction::RIGHT => self.location.x +=step,
+            Direction::UP => self.location.y -=step,
+            Direction::DOWN => self.location.y +=step,
+            _ => (),
+        }
+    }
+
+    pub fn get_rays(&self, visual_window_start_x:f32, map: Map) -> Vec<Ray> {
+        // println!("         GET RAYS, player angle {}", self.angle);
+        let player_angle:f32 = get_angle(self.looking_at);
+        let initial_angle = player_angle - FOV/2.0;
+        let number_of_rays:f32 = screen_width() - visual_window_start_x;
+        // let number_of_rays:f32 = 5.0;
+        // println!(" number_of_rays {}", number_of_rays);
+        let angle_step:f32 = FOV / number_of_rays;
+        // println!(" angle_step {}", angle_step);
+        let mut result: Vec<Ray> = Vec::new();
+        let mut i = 0;
+        while i < number_of_rays as i32 {
+            let angle:f32 = initial_angle + i as f32 * angle_step;
+            let one_ray:Ray = Ray::cast_ray(angle, self.location.x+ BOX_SIZE /2.0, self.location.y+ BOX_SIZE /2.0, map.clone());
+            result.push(one_ray);
+            i += 1;
+        }
+        // println!(" result {:?}", result[0].distance);
+        return result;
+    }
+}
+
+pub fn get_angle(direction: Direction) -> f32 {
+    match direction {
+        Direction::LEFT => 3.14,
+        Direction::RIGHT => 0.0,
+        Direction::UP => 4.71,
+        Direction::DOWN => 1.57,
+    }
+}
+
+pub fn fix_fish_eye(distance: f32, angle: f32, player_angle: f32) -> f32 {
+    let diff = angle - player_angle;
+    return distance * diff.cos();
 }

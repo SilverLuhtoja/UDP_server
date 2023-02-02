@@ -29,17 +29,21 @@ impl Point {
     }
 }
 
-#[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Player{
     pub location: Point,
-    pub looking_at:  Direction
+    pub looking_at:  Direction,
+    pub username: String,
+    pub score: i32,
 }
 
 impl Player {
     pub fn new(location: Point) -> Self {
         Self{
             location,
-            looking_at: Direction::UP
+            looking_at: Direction::UP,
+            username: "default name".to_string(),
+            score: 15,
         }        
     }
 }
