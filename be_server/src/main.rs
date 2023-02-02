@@ -1,44 +1,49 @@
-use std::net::UdpSocket;
+// #![allow(dead_code)]
+// #![allow(unused_imports)]
+mod map;
+mod maze;
+mod player;
+mod server;
 
-const ADDR:&str = "127.0.0.1";
-const PORT:u16 = 4242;
+use crate::maze::{Grid, LOW};
+use crate::server::*;
+use player::{Player, Point};
+use serde_json::json;
+use std::collections::HashMap;
+use std::net::SocketAddr;
 
-fn main() -> std::io::Result<()> {
-    // for UDP4
-    // let socket = UdpSocket::bind("[::]:2000")?;  // for UDP4/6
-    let socket = UdpSocket::bind(format!("{}:{}",ADDR, PORT))?; 
-    let mut buf = [0; 2048];
-
-    //TODO
-    //1. create new maze
-    //2. position clients with random positions
-
-
-
-
-    println!("Creating server : {:?}.Listening....", socket);
-    println!("Waiting messages:");
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
+    let server= Server::new().await;
+    let mut grid = Grid::new(10, 10, LOW);
+    grid.generate_maze();
+    let map = grid.convert_to_map();
+    let mut players:HashMap<SocketAddr, Player> = HashMap::new();
+    
+    let mut message = BroadcastMessage{
+                map: json!(map),
+                players : players.clone()
+            };
+    
     loop {
-        println!();
-        // (bite_slice, address where it came from)
-        let (amt, src) = socket.recv_from(&mut buf).expect("incoming message failed");
-        let incoming_message = String::from_utf8_lossy(&mut buf[..amt]);
-        println!("client <{}>: {:?}", src, incoming_message);
-
-        //TODO
-        //if client is connected, then send the map and positions 
+        let (data, src) = server.read_message().await;
         
-        if incoming_message == "connect" {
-            let message  = format!("Successful connection with {}:{}",ADDR,PORT);
-            socket.send_to(message.as_bytes(), &src)?;
-        }else if incoming_message == "stop"{
-            println!("CLIENT LEAVING");
-        }else {
-            // Redeclare `buf` as slice of the received data
-            // and send data back to origin.
-            let buf = &mut buf[..amt];
-            socket.send_to(&buf, &src)?;
+        if data.message_type == "connect" {
+            println!("CONNECTING WITH  --> {}", src);
+            let spawn = map.get_spawn().await;
+            let player = Player::new(spawn);
+            players.insert(src,player);
+        }
 
+        if data.message_type == "movement" {
+            let current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
+            let player:Player = serde_json::from_value(data.data)?;
+            *current_player = player;
+        }
+        
+        message.players = players.clone();
+        for (addr,_) in &players{
+            server.send_message(&message, addr).await
         }
     }
 }
