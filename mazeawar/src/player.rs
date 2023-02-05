@@ -92,6 +92,15 @@ impl Player{
 
     }
 
+    pub fn draw_enemy(&self, enemy: &Player, game_window: GameWindow){
+        let visual_screen_center_points = game_window.get_visual_screen_center_point();
+        let radius = 40.0;
+        let color = RED;
+        if self.location.x == enemy.location.x || self.location.y == enemy.location.y{
+            println!("ALIGNED");
+            draw_circle(visual_screen_center_points.0,visual_screen_center_points.1, radius, color);}
+    }
+
     pub fn draw_facing_indicator(&self){
         let middle_offset:f32 = 7.5;
         match self.looking_at {

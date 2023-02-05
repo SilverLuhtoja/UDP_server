@@ -29,7 +29,7 @@ mod ray;
 fn window_conf() -> Conf {
     Conf {
         window_title: "MAZE".to_owned(),
-        fullscreen: true,
+        fullscreen: false,
         ..Default::default()
     }
 }
@@ -44,7 +44,7 @@ async fn main() -> std::io::Result<()> {
 
     //option for tests
     //to test this has to be changed to local ip address
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10,5, 0, 2)), 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
@@ -72,8 +72,8 @@ async fn main() -> std::io::Result<()> {
             if src.to_string() == sender_clone.get_address().to_string() {
                 me = player.clone();
                 player.draw(true, game_window.clone(), data.map.clone());
-            } else{
-                player.draw(false, game_window.clone(), data.map.clone());
+            }else{
+                me.draw_enemy(player, game_window.clone());
             }
         }
 
