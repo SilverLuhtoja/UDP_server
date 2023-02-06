@@ -58,8 +58,8 @@ impl Player {
 
     pub fn draw(&self, me: bool, game_window: GameWindow, map: Map, is_shot: bool) {
         let mut player_color: macroquad::color::Color = RED;
+        let mut rays: Vec<Ray> = vec![];
         if me {
-            let mut rays: Vec<Ray> = Vec::new();
             //player color on the minimap
             player_color = GREEN;
 
