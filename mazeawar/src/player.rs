@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::ray::*;
 use crate::map::*;
 
-const FOV:f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)-> to_radians(60.0)
+const FOV:f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)
 
 #[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum  Direction {
@@ -69,11 +69,11 @@ impl Player{
                 let start_x:f32 = self.location.x+ BOX_SIZE /2.0;
                 let start_y:f32 = self.location.y+ BOX_SIZE /2.0;
                 let player_angle:f32 = get_angle(self.looking_at);
-                draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
+                // draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
 
                 //visual part:
                 let distance:f32 = fix_fish_eye(ray.distance, ray.angle, player_angle);
-                let wall_height:f32 = ((BOX_SIZE * 5.0) / distance) *70.0;
+                let wall_height:f32 = ((BOX_SIZE * 5.0) / distance) *277.0;
                 let mut wall_color:macroquad::color::Color = LIGHTGRAY;
                 if ray.vertical {
                     wall_color = GRAY;
