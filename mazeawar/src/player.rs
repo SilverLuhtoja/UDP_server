@@ -59,6 +59,7 @@ impl Player {
     pub fn draw(&self, me: bool, game_window: GameWindow, map: Map, is_shot: bool) {
         let mut player_color: macroquad::color::Color = RED;
         if me {
+            let mut rays: Vec<Ray> = Vec::new();
             //player color on the minimap
             player_color = GREEN;
 
@@ -67,6 +68,9 @@ impl Player {
 
             // Draw rays from player on minimap and visual part
             for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
+                if ray.angle == get_angle(self.looking_at) {
+                    rays.push(ray.clone());
+                }
                 //on minimap
                 let start_x: f32 = self.location.x + BOX_SIZE / 2.0;
                 let start_y: f32 = self.location.y + BOX_SIZE / 2.0;
@@ -92,6 +96,8 @@ impl Player {
                 draw_rectangle(game_window.visual_window_start_x, game_window.visual_window_start_y, screen_width(), screen_height(), ORANGE);
             }
         }
+        let x = game_window.visual_window_start_x + game_window.visual_window_finish_x / 2.0;
+        draw_line(x, game_window.visual_window_finish_y, x+rays[0].distance, game_window.visual_window_start_y, 50.0, RED);
         //draw player on the minimap
         draw_circle(self.location.x + BOX_SIZE / 2.0, self.location.y + BOX_SIZE / 2.0, BOX_SIZE / 4.0, player_color);
         self.draw_facing_indicator();
