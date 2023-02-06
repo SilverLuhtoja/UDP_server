@@ -4,6 +4,7 @@ use std::f64::consts::PI;
 use crate::player::BOX_SIZE;
 use crate::map::*;
 
+#[derive(Clone, Debug)]
 pub struct Ray {
     pub angle: f32,
     pub distance: f32,

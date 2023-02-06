@@ -18,6 +18,7 @@ use crate::client_server::*;
 use crate::player::*;
 use crate::utils::*;
 use crate::map::GameWindow;
+use crate::ray::Ray;
 
 mod client_server;
 mod map;
@@ -29,7 +30,7 @@ mod ray;
 fn window_conf() -> Conf {
     Conf {
         window_title: "MAZE".to_owned(),
-        fullscreen: true,
+        fullscreen: false,
         ..Default::default()
     }
 }
@@ -66,14 +67,15 @@ async fn main() -> std::io::Result<()> {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
         }
+        let mut rays: Vec<Ray> = vec![];
         let game_window: GameWindow = data.map.draw(&data.players);
         let mut me = Player::new(my_point);
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string() {
                 me = player.clone();
-                player.draw(true, game_window.clone(), data.map.clone());
-            } else{
-                player.draw(false, game_window.clone(), data.map.clone());
+                rays = me.draw(game_window.clone(), data.map.clone());
+            } else {
+                me.draw_enemy(player.clone(), rays.clone());
             }
         }
 

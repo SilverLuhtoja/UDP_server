@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ray::*;
 use crate::map::*;
+use std::collections::HashMap;
 
 const FOV:f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)
 
@@ -54,42 +55,74 @@ impl Player{
         }        
     }
 
-    pub fn draw(&self, me: bool, game_window: GameWindow, map: Map){
-        let mut player_color:macroquad::color::Color = RED;
-        if me{
-            //player color on the minimap
-            player_color = GREEN;
+    pub fn draw(&self, game_window: GameWindow, map: Map) -> Vec<Ray>{
+        //line to separate map and visual
+        draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
+        // Draw rays from player on minimap and visual part
+        let mut rays: Vec<Ray> = vec![];
+        for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
+            if ray.angle == get_angle(self.looking_at) {
+                rays.push(ray.clone());
+            }
+            //on minimap
+            let start_x:f32 = self.location.x+ BOX_SIZE /2.0;
+            let start_y:f32 = self.location.y+ BOX_SIZE /2.0;
+            let player_angle:f32 = get_angle(self.looking_at);
+            // draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
 
-            //line to separate map and visual
-            draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
-            
-            // Draw rays from player on minimap and visual part
-            for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
-                //on minimap
-                let start_x:f32 = self.location.x+ BOX_SIZE /2.0;
-                let start_y:f32 = self.location.y+ BOX_SIZE /2.0;
-                let player_angle:f32 = get_angle(self.looking_at);
-                // draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
+            //visual part:
+            let distance:f32 = fix_fish_eye(ray.distance, ray.angle, player_angle);
+            let wall_height:f32 = ((BOX_SIZE * 5.0) / distance) *277.0;
+            let mut wall_color:macroquad::color::Color = LIGHTGRAY;
+            if ray.vertical {
+                wall_color = GRAY;
+            }
+            //wall
+            draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 - wall_height/2.0, 1.0, wall_height, wall_color);
+            //floor
+            draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 + wall_height/2.0, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, BEIGE);
+            //ceiling
+            draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, WHITE);
+        }
+        // println!("FINISH");
 
-                //visual part:
-                let distance:f32 = fix_fish_eye(ray.distance, ray.angle, player_angle);
-                let wall_height:f32 = ((BOX_SIZE * 5.0) / distance) *277.0;
-                let mut wall_color:macroquad::color::Color = LIGHTGRAY;
-                if ray.vertical {
-                    wall_color = GRAY;
+        //draw player on the minimap
+        draw_circle(self.location.x + BOX_SIZE /2.0, self.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, GREEN);
+        self.draw_facing_indicator();
+        return rays;
+    }
+
+    pub fn draw_enemy(&self, enemy: Player, rays: Vec<Ray> ){
+        //minimap
+        draw_circle(enemy.location.x + BOX_SIZE /2.0, enemy.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, RED);
+        enemy.draw_facing_indicator();
+        for ray in rays{
+            if ray.angle == get_angle(self.looking_at) {
+                //check ray length with enemy
+                match self.looking_at {
+                    Direction::UP => {
+                        if self.location.y > enemy.location.y && ray.distance > self.location.y - enemy.location.y && enemy.location.x == self.location.x {
+                            println!("I CAN SEE YOU UP!");
+                        }
+                    },
+                    Direction::DOWN => {
+                        if self.location.y < enemy.location.y && ray.distance > enemy.location.y - self.location.y && enemy.location.x == self.location.x {
+                            println!("I CAN SEE YOU DOWN!");
+                        }
+                    },
+                    Direction::LEFT => {
+                        if self.location.x > enemy.location.x && ray.distance > self.location.x - enemy.location.x && enemy.location.y == self.location.y {
+                            println!("I CAN SEE YOU LEFT!");
+                        }
+                    },
+                    Direction::RIGHT => {
+                        if enemy.location.x > self.location.x  && ray.distance > enemy.location.x - self.location.x && enemy.location.y == self.location.y {
+                            println!("I CAN SEE YOU RIGHT!");
+                        }
+                    }
                 }
-                //wall
-                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 - wall_height/2.0, 1.0, wall_height, wall_color);
-                //floor
-                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 + wall_height/2.0, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, BEIGE);
-                //ceiling
-                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, WHITE);
             }
         }
-        //draw player on the minimap
-        draw_circle(self.location.x + BOX_SIZE /2.0, self.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, player_color);
-        self.draw_facing_indicator();
-
     }
 
     pub fn draw_facing_indicator(&self){
@@ -101,6 +134,7 @@ impl Player{
             Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE/2.0 , self.location.y + middle_offset, 5.0,  5.0,  RED)
         }
     }
+
 
     pub fn set_postion(&mut self, point: Point){
         self.location = point;

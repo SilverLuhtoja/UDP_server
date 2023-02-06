@@ -97,6 +97,24 @@ impl GameWindow {
             visual_window_finish_y: screen_height(),
         }
     }
+
+    
+    // pub fn get_visual_screen_center_point(&self) -> (f32,f32){
+    //     let visual_screen_dimensions = self.get_visual_screen_width_height();
+    //     let visual_screen_starting_points = self.get_visual_screen_starting_point();
+    //     let visual_screen_center_points = (visual_screen_dimensions.0 / 2.0, visual_screen_dimensions.1 / 2.0);
+    //     (visual_screen_starting_points.0 + visual_screen_center_points.0, visual_screen_starting_points.1 + visual_screen_center_points.1)
+    // }
+
+    // pub fn get_visual_screen_width_height(&self)-> (f32,f32) {
+    //     let width = self.visual_window_finish_x - self.visual_window_start_x;
+    //     let height= self.visual_window_finish_y - self.visual_window_start_y;
+    //     (width,height)
+    // }
+
+    // pub fn get_visual_screen_starting_point(&self)-> (f32,f32) {
+    //     (self.visual_window_start_x,self.visual_window_start_y)
+    // }
 }
 
 
