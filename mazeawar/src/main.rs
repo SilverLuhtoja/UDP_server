@@ -61,6 +61,7 @@ async fn main() -> std::io::Result<()> {
 
     let mut data = Data::default();
     let mut my_point = Point::zero();
+    let mut is_shot = false;
     // Current display updates based on events, should be from back
     loop {
         if let Ok(received_data) = rx.try_recv() {
@@ -71,10 +72,16 @@ async fn main() -> std::io::Result<()> {
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string() {
                 me = player.clone();
-                player.draw(true, game_window.clone(), data.map.clone());
+                player.draw(true, game_window.clone(), data.map.clone(), is_shot);
             } else{
-                player.draw(false, game_window.clone(), data.map.clone());
+                player.draw(false, game_window.clone(), data.map.clone(), false);
             }
+        }
+        is_shot = false;
+        if is_key_down(KeyCode::Space) {
+            me.shoot(data.map.0.clone());
+            is_shot = true;
+            &sender_clone.send_message("shoot", json!(me));
         }
 
         listen_move_events(&sender_clone, me, data.map.0.clone());
@@ -89,34 +96,23 @@ async fn main() -> std::io::Result<()> {
 
 pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>) {
     let mut action:bool = false;
-    let mut action_type : &str = "";
     if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
         me.turn_left();
         action = true;
-        action_type = "movement";
     }
     if is_key_pressed(KeyCode::D) || is_key_pressed(KeyCode::Right) {
         me.turn_right();
         action = true;
-        action_type = "movement";
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up){
         me.step(20.0, map.clone());
         action = true;
-        action_type = "movement";
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down){
         me.step(-20.0, map.clone());
         action = true;
-        action_type = "movement";
-    }
-    // if is_key_pressed(KeyCode::Space) {
-    if is_key_down(KeyCode::Space) {
-        me.shoot(map.clone());
-        action = true;
-        // action_type = "shoot";
     }
     if action {
-        client.send_message(action_type, json!(me))
+        client.send_message("movement", json!(me))
     }
 }

@@ -5,7 +5,7 @@ mod maze;
 mod player;
 mod server;
 
-use crate::maze::{Grid, LOW};
+use crate::maze::{Grid, HIGH, LOW};
 use crate::server::*;
 use player::{Player, Point};
 use serde_json::json;
@@ -15,7 +15,7 @@ use std::net::SocketAddr;
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let server= Server::new().await;
-    let mut grid = Grid::new(10, 10, LOW);
+    let mut grid = Grid::new(10, 10, HIGH);
     grid.generate_maze();
     let map = grid.convert_to_map();
     let mut players:HashMap<SocketAddr, Player> = HashMap::new();

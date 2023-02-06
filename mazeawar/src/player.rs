@@ -56,7 +56,7 @@ impl Player {
         }
     }
 
-    pub fn draw(&self, me: bool, game_window: GameWindow, map: Map) {
+    pub fn draw(&self, me: bool, game_window: GameWindow, map: Map, is_shot: bool) {
         let mut player_color: macroquad::color::Color = RED;
         if me {
             //player color on the minimap
@@ -86,6 +86,10 @@ impl Player {
                 draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y / 2.0 + wall_height / 2.0, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, BEIGE);
                 //ceiling
                 draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, WHITE);
+            }
+            if is_shot {
+                // draw_line();
+                draw_rectangle(game_window.visual_window_start_x, game_window.visual_window_start_y, screen_width(), screen_height(), ORANGE);
             }
         }
         //draw player on the minimap
@@ -166,10 +170,9 @@ impl Player {
         }
         return result;
     }
-
+//shooting
     pub fn shoot(&self, map: Vec<Vec<i32>>) {
         let (x, y) = self.get_tiles();
-        // println!("{:?}", (x, y));
         let mut final_point_x: f32 = self.get_center_x();
         let mut final_point_y: f32 = self.get_center_y();
         match self.looking_at {
@@ -204,7 +207,6 @@ impl Player {
                 }
             }
         }
-        // println!("FINAL POINT: {:?}", (final_point_x, final_point_y));
         self.animate_shoot(final_point_x, final_point_y);
     }
     fn get_tiles(&self) -> (i32, i32) {

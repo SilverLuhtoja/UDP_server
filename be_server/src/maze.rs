@@ -12,7 +12,7 @@ const LEFT: usize = 3;
 //constants to define difficulty level by percentage of the walls that has to be removed
 pub const LOW: i32 = 50;
 pub const MEDIUM: i32 = 30;
-pub const HIGH: i32 = 10;
+pub const HIGH: i32 = 0;
 
 
 #[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
