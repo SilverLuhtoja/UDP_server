@@ -44,7 +44,7 @@ async fn main() -> std::io::Result<()> {
 
     //option for tests
     //to test this has to be changed to local ip address
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 0, 37)), 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
@@ -89,27 +89,34 @@ async fn main() -> std::io::Result<()> {
 
 pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>) {
     let mut action:bool = false;
+    let mut action_type : &str = "";
     if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
         me.turn_left();
         action = true;
+        action_type = "movement";
     }
     if is_key_pressed(KeyCode::D) || is_key_pressed(KeyCode::Right) {
         me.turn_right();
         action = true;
+        action_type = "movement";
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up){
         me.step(20.0, map.clone());
         action = true;
+        action_type = "movement";
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down){
         me.step(-20.0, map.clone());
         action = true;
+        action_type = "movement";
     }
-    if is_key_pressed(KeyCode::Space) {
+    // if is_key_pressed(KeyCode::Space) {
+    if is_key_down(KeyCode::Space) {
+        me.shoot(map.clone());
         action = true;
+        // action_type = "shoot";
     }
     if action {
-        client.send_message("movement", json!(me))
+        client.send_message(action_type, json!(me))
     }
 }
-
