@@ -9,6 +9,7 @@ use std::{net::{SocketAddr}, collections::HashMap};
 
 pub const FLOOR: i32 = 0;
 pub const WALL: i32 = 1;
+pub const PLAYER: i32 = 2;
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize,Default)]
 pub struct Map(
@@ -34,6 +35,8 @@ impl Map {
             for j in 0..self.width() {
                 if self.0[i][j] == WALL {
                     draw_rectangle(j as f32 * size + offset, i as f32 * size + offset, size, size, WHITE);
+                } else if self.0[i][j] == PLAYER {
+                    draw_rectangle(j as f32 * size + offset, i as f32 * size + offset, size, size, RED);
                 } else {
                     draw_rectangle(j as f32 * size + offset, i as f32 * size + offset, size, size, BLACK);
                 }

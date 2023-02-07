@@ -17,7 +17,7 @@ async fn main() -> std::io::Result<()> {
     let server= Server::new().await;
     let mut grid = Grid::new(10, 10, LOW);
     grid.generate_maze();
-    let map = grid.convert_to_map();
+    let mut map = grid.convert_to_map();
     let mut players:HashMap<SocketAddr, Player> = HashMap::new();
     
     let mut message = BroadcastMessage{
@@ -37,10 +37,13 @@ async fn main() -> std::io::Result<()> {
 
         if data.message_type == "movement" {
             let current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
+            map.remove_player(&current_player);
             let player:Player = serde_json::from_value(data.data)?;
             *current_player = player;
+            map.set_player(&current_player)
         }
         
+        message.map = json!(map.clone());
         message.players = players.clone();
         for (addr,_) in &players{
             server.send_message(&message, addr).await

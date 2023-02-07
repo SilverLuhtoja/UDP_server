@@ -71,10 +71,15 @@ async fn main() -> std::io::Result<()> {
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string() {
                 me = player.clone();
-                player.draw(true, game_window.clone(), data.map.clone());
+                player.draw(game_window.clone(), data.map.clone());
             }else{
-                me.draw_enemy(player, game_window.clone());
+                me.draw_enemy(player, game_window.clone(),data.map.clone());
             }
+            // player.draw(false, game_window.clone(), data.map.clone());
+            // me.draw_enemy(player, game_window.clone());
+            // me.draw(player, game_window.clone(), data.map.clone());
+            
+            
         }
 
         listen_move_events(&sender_clone, me, data.map.0.clone());

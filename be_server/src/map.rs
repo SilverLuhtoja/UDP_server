@@ -1,4 +1,4 @@
-use crate::player::Point;
+use crate::player::{Point, Player};
 use r::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +10,18 @@ pub struct Map(pub Vec<Vec<i32>>);
 impl Map {
     pub fn new(width: usize, height: usize) -> Self {
         Self(vec![vec![0; width]; height])
+    }
+
+    pub fn set_player(&mut self, player: &Player){
+        let column = (player.location.x / 20.0) as usize;
+        let row = (player.location.y / 20.0 ) as usize;
+        self.0[row][column] = 2;
+    }
+
+    pub fn remove_player(&mut self, player: &Player){
+        let column = (player.location.x / 20.0) as usize;
+        let row = (player.location.y / 20.0 ) as usize;
+        self.0[row][column] = 0;
     }
 
     pub async fn get_spawn(&self) -> Point {
