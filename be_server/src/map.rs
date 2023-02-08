@@ -11,6 +11,9 @@ impl Map {
     pub fn new(width: usize, height: usize) -> Self {
         Self(vec![vec![0; width]; height])
     }
+    pub fn new_from_arr(map: Vec<Vec<i32>>) -> Self{
+        Self(map)
+    }
 
     pub fn set_player(&mut self, player: &Player){
         let column = (player.location.x / 20.0) as usize;

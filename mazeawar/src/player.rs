@@ -53,6 +53,9 @@ impl Player{
             score: 15,
         }        
     }
+    pub fn set_loc(&mut self, loc: Point){
+        self.location = loc;
+    }
 
     pub fn draw(&self, game_window: GameWindow, map: Map){
             let player_color:macroquad::color::Color = GREEN;
@@ -81,18 +84,18 @@ impl Player{
                 if ray.vertical {
                     wall_color = GRAY;
                 }
-                if self.casting_on_what(ray_x, ray_y, &map) == 2 {
-                    println!("CASTING ON PLAYER");
-                    draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 - wall_height/2.0, 1.0, wall_height, RED);
-                }else{
+            // if self.casting_on_what(ray_x, ray_y, &map) == 2 {
+            //     println!("CASTING ON PLAYER");
+            //     draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 - wall_height/2.0, 1.0, wall_height, RED);
+            // }else{
 
-                    //wall
-                    draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 - wall_height/2.0, 1.0, wall_height, wall_color);
-                    //floor
-                    draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 + wall_height/2.0, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, BEIGE);
-                    //ceiling
-                    draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, WHITE);
-                }
+                //wall
+                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 - wall_height/2.0, 1.0, wall_height, wall_color);
+                //floor
+                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 + wall_height/2.0, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, BEIGE);
+                //ceiling
+                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, WHITE);
+            // }
         }
         //draw player on the minimap
         draw_circle(self.location.x + BOX_SIZE /2.0, self.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, player_color);
@@ -103,29 +106,28 @@ impl Player{
     pub fn casting_on_what(&self, ray_x:f32,ray_y:f32,map: &Map) -> i32 {
         map.0[(ray_x/20.0) as usize][(ray_y/20.0) as usize] 
     }
-    
-    pub fn draw_enemy(&self, enemy: &Player, game_window: GameWindow, map: Map){
+
+    pub fn draw_enemy(&self, enemy: &Player,screen: &GameWindow){
         draw_circle(enemy.location.x + BOX_SIZE /2.0, enemy.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, RED);
 
-        let start_x:f32 = self.location.x+ BOX_SIZE /2.0;
-        let start_y:f32 = self.location.y+ BOX_SIZE /2.0;
-        let player_angle:f32 = get_angle(self.looking_at);
-        for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
-            let distance:f32 = fix_fish_eye(ray.distance, ray.angle, player_angle);
-            let wall_height:f32 = ((BOX_SIZE * 5.0) / distance) *70.0;
+        let sx = enemy.location.x - self.location.x;
+        let sy = enemy.location.y - self.location.y;
+        let cs = get_angle(self.looking_at).cos();
+        let sn = get_angle(self.looking_at).sin();
+        let a = sy*cs+sx*sn;
+        let b = sx*cs-sy*sn;
+        let distance = (sx.powi(2) + sy.powi(2)).sqrt();
 
-            if (start_x <= enemy.location.x && enemy.location.x <= start_x + ray.angle.cos() * ray.distance) 
-            || (start_y <= enemy.location.y && enemy.location.y <= start_y + ray.angle.sin() * ray.distance){
-                draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, ORANGE);
-                if (enemy.location.x == start_x + ray.angle.cos() * ray.distance) && (enemy.location.y == start_y + ray.angle.sin() * ray.distance){
-                    draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BLUE);
-                }
-                
-                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y/2.0 + wall_height/2.0, 1.0, game_window.visual_window_finish_y/2.0 - wall_height/2.0, RED);
-            }
-        }
+        let (width_center,height_center) = screen.get_visual_screen_center_point();
+        
+        let screen_sx = (a*108.0/b) + width_center;
+        let screen_sy = (1.0/b) +  height_center;
+        draw_circle(screen_sx, screen_sy, (BOX_SIZE/distance) * 100.0, RED);
+        // let distance = distance(enemy.location.x, self.location.x, enemy.location.y, self.location.y);
+        // println!("DIstance from enemy{}", distance);
+        // println!("DIstance from enemy {} {}", a, b);
     }
-
+   
     pub fn draw_facing_indicator(&self){
         let middle_offset:f32 = 7.5;
         match self.looking_at {

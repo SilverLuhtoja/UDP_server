@@ -9,6 +9,7 @@ use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::thread;
 use macroquad::prelude::*;
+use map::Map;
 use serde_json::*;
 use regex::Regex;
 use std::collections::HashMap;
@@ -36,6 +37,18 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
+    // let map_layout:Vec<Vec<i32>> = vec![
+    //     vec![1, 1, 1, 1, 1, 1],
+    //     vec![1, 0, 0, 0, 0, 1],
+    //     vec![1, 0, 0, 0, 0, 1],
+    //     vec![1, 0, 1, 1, 0, 1],
+    //     vec![1, 0, 0, 0, 0, 1],
+    //     vec![1, 0, 0, 0, 0, 1],
+    //     vec![1, 1, 1, 1, 1, 1]
+    //     ];
+    // let map = Map::new_from_arr(map_layout);
+
+
     //option for prod
     //add user input for server ip and user name
     // let input_ip = input::read("Enter IP address: ".to_string(), input::InputType::Ip);
@@ -44,7 +57,8 @@ async fn main() -> std::io::Result<()> {
 
     //option for tests
     //to test this has to be changed to local ip address
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10,5, 0, 2)), 4242);
+    // 192.168.8.102:4242
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 8, 102)), 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
@@ -67,13 +81,16 @@ async fn main() -> std::io::Result<()> {
             data = received_data;
         }
         let game_window: GameWindow = data.map.draw(&data.players);
-        let mut me = Player::new(my_point);
+        // let game_window: GameWindow = map.draw(&data.players);
+        let mut  me = Player::new(my_point);
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string() {
+                my_point = player.location.clone();
                 me = player.clone();
+                me.location = my_point;
                 player.draw(game_window.clone(), data.map.clone());
             }else{
-                me.draw_enemy(player, game_window.clone(),data.map.clone());
+                me.draw_enemy(player,&game_window);
             }
             // player.draw(false, game_window.clone(), data.map.clone());
             // me.draw_enemy(player, game_window.clone());

@@ -7,18 +7,32 @@ mod server;
 
 use crate::maze::{Grid, LOW};
 use crate::server::*;
+use map::Map;
 use player::{Player, Point};
 use serde_json::json;
 use std::collections::HashMap;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, IpAddr, Ipv4Addr};
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let server= Server::new().await;
-    let mut grid = Grid::new(10, 10, LOW);
-    grid.generate_maze();
-    let mut map = grid.convert_to_map();
+    // let mut grid = Grid::new(10, 10, LOW);
+    // grid.generate_maze();
+    // let mut map = grid.convert_to_map();
     let mut players:HashMap<SocketAddr, Player> = HashMap::new();
+    let map_layout:Vec<Vec<i32>> = vec![
+        vec![1, 1, 1, 1, 1, 1],
+        vec![1, 0, 0, 0, 0, 1],
+        vec![1, 0, 0, 0, 0, 1],
+        vec![1, 0, 1, 1, 0, 1],
+        vec![1, 0, 0, 0, 0, 1],
+        vec![1, 0, 0, 0, 0, 1],
+        vec![1, 1, 1, 1, 1, 1]
+        ];
+    let mut map = Map::new_from_arr(map_layout);
+    let decoy:Player = Player::new(map.get_spawn().await) ;
+    let decoy_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(10, 5, 0, 2)), 0);
+    players.insert(decoy_addr,decoy);
     
     let mut message = BroadcastMessage{
                 map: json!(map),
