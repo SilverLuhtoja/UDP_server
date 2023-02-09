@@ -5,7 +5,7 @@ mod maze;
 mod player;
 mod server;
 
-use crate::maze::{Grid, LOW};
+use crate::maze::{Grid, HIGH, LOW, MEDIUM};
 use crate::server::*;
 use player::{Player, Point};
 use serde_json::json;

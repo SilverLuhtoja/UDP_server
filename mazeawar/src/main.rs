@@ -63,6 +63,7 @@ async fn main() -> std::io::Result<()> {
 
     let mut data = Data::default();
     let mut zero_point = Point::zero();
+    let mut is_shot = false;
     // Current display updates based on events, should be from back
     loop {
         if let Ok(received_data) = rx.try_recv() {
@@ -71,12 +72,12 @@ async fn main() -> std::io::Result<()> {
 
         let game_window: GameWindow = data.map.draw(&data.players);
         let mut me = Player::new(zero_point);
-
+        let mut enemy_positions: Vec<Point> = vec![];
         //FIRST FOUND ME IN THE LIST to settle the position
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string() {
                 me = player.clone();
-                me.draw(game_window.clone(), data.map.clone());
+                me.draw(game_window.clone(), data.map.clone(), is_shot);
             }
         }
         
@@ -85,11 +86,18 @@ async fn main() -> std::io::Result<()> {
             if src.to_string() != sender_clone.get_address().to_string() {
                 let wall_in_between: bool = data.map.check_visibility(me.location.clone(), player.location.clone()); 
                 me.draw_enemy(player.clone(), &game_window, wall_in_between);
+                enemy_positions.push(player.location.clone());
             }
         }
 
 
-        listen_move_events(&sender_clone, me, data.map.0.clone());
+        is_shot = false;
+        if is_key_down(KeyCode::Space) {
+            me.shoot(data.map.0.clone());
+            is_shot = true;
+            &sender_clone.send_message("shoot", json!(me));
+        }
+        listen_move_events(&sender_clone, me, data.map.0.clone(), enemy_positions);
         if is_key_pressed(KeyCode::Escape) {
             sender_clone.send_message("I QUIT", json!(""));
             exit(1)
@@ -99,7 +107,7 @@ async fn main() -> std::io::Result<()> {
     }
 }
 
-pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>) {
+pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>, enemy_positions: Vec<Point>) {
     let mut action:bool = false;
     if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
         me.turn_left();
@@ -110,18 +118,12 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>) {
         action = true;
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
-        me.step(20.0, map.clone());
-        action = true;
+        action = me.step(20.0, map.clone(), enemy_positions.clone());
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
-        me.step(-20.0, map.clone());
-        action = true;
-    }
-    if is_key_pressed(KeyCode::Space) {
-        action = true;
+        action = me.step(-20.0, map.clone(), enemy_positions.clone());
     }
     if action {
         client.send_message("movement", json!(me))
     }
 }
-

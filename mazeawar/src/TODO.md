@@ -1,7 +1,3 @@
 FRONT:
-- коллизия -> со стенами OK (с другими игроками тоже?)
-- выстрел и как его визуально оформить VALERIA
-- как показывать противников  визуально ANNA
-- fps OK
-- username request
 - sort scoreboard players
+- to remove "visualization through walls"
