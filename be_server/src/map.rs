@@ -21,10 +21,10 @@ impl Map {
 
     pub async fn get_spawn(&self) -> Point {
         loop {
-            let row = thread_rng().gen_range(1..self.0.len() - 1);
-            let column = thread_rng().gen_range(1..self.0.len() - 1);
-            if self.0[row][column] == 0 {
-                return Point::new(row as f32 * 20.0, column as f32 * 20.0);
+            let row = thread_rng().gen_range(1..self.height() - 1);
+            let column = thread_rng().gen_range(1..self.width() - 1);
+            if self.0[row][column] == FLOOR {
+                return Point::new(column as f32 * 20.0, row as f32 * 20.0);
             }
         }
     }
