@@ -44,7 +44,7 @@ async fn main() -> std::io::Result<()> {
 
     //option for tests
     //to test this has to be changed to local ip address
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 0, 37)), 4242);
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 0, 43)), 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);

@@ -59,6 +59,7 @@ impl Player {
     pub fn draw(&self, me: bool, game_window: GameWindow, map: Map, is_shot: bool) {
         let mut player_color: macroquad::color::Color = RED;
         let mut rays: Vec<Ray> = vec![];
+        let mut offset_height: f32 = 0.0;
         if me {
             //player color on the minimap
             player_color = GREEN;
@@ -68,9 +69,6 @@ impl Player {
 
             // Draw rays from player on minimap and visual part
             for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
-                if ray.angle == get_angle(self.looking_at) {
-                    rays.push(ray.clone());
-                }
                 //on minimap
                 let start_x: f32 = self.location.x + BOX_SIZE / 2.0;
                 let start_y: f32 = self.location.y + BOX_SIZE / 2.0;
@@ -78,8 +76,14 @@ impl Player {
                 draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
 
                 //visual part:
-                let distance: f32 = fix_fish_eye(ray.distance, ray.angle, player_angle);
-                let wall_height: f32 = ((BOX_SIZE * 5.0) / distance) * 70.0;
+                let distance = fix_fish_eye(ray.distance, ray.angle, player_angle);
+                let wall_height = ((BOX_SIZE * 5.0) / distance) * 70.0;
+
+                if ray.angle == get_angle(self.looking_at) {
+                    rays.push(ray.clone());
+                    offset_height = ((BOX_SIZE * 5.0) / distance) * 70.0
+                }
+
                 let mut wall_color: macroquad::color::Color = LIGHTGRAY;
                 if ray.vertical {
                     wall_color = GRAY;
@@ -92,12 +96,10 @@ impl Player {
                 draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, WHITE);
             }
             if is_shot {
-                // draw_line();
-                draw_rectangle(game_window.visual_window_start_x, game_window.visual_window_start_y, screen_width(), screen_height(), ORANGE);
+                let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
+                draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0 + offset_height / 2.0, 5.0, GREEN);
             }
         }
-        let x = game_window.visual_window_start_x + game_window.visual_window_finish_x / 2.0;
-        draw_line(x, game_window.visual_window_finish_y, x+rays[0].distance, game_window.visual_window_start_y, 50.0, RED);
         //draw player on the minimap
         draw_circle(self.location.x + BOX_SIZE / 2.0, self.location.y + BOX_SIZE / 2.0, BOX_SIZE / 4.0, player_color);
         self.draw_facing_indicator();
@@ -176,7 +178,7 @@ impl Player {
         }
         return result;
     }
-//shooting
+    //shooting
     pub fn shoot(&self, map: Vec<Vec<i32>>) {
         let (x, y) = self.get_tiles();
         let mut final_point_x: f32 = self.get_center_x();
