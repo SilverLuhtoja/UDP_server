@@ -15,6 +15,7 @@ pub enum  Direction {
     RIGHT
 }
 
+
 #[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Point{
     pub x: f32,
@@ -50,12 +51,12 @@ impl Player{
         Self{
             location,
             looking_at: Direction::UP,
-            username: "default name".to_string(),
-            score: 15,
+            username: "".to_string(),
+            score: 0,
         }        
     }
 
-    pub fn draw(&self, game_window: GameWindow, map: Map) -> Vec<Ray>{
+    pub fn draw(&self, game_window: GameWindow, map: Map){
         //line to separate map and visual
         draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
         // Draw rays from player on minimap and visual part
@@ -68,7 +69,7 @@ impl Player{
             let start_x:f32 = self.location.x+ BOX_SIZE /2.0;
             let start_y:f32 = self.location.y+ BOX_SIZE /2.0;
             let player_angle:f32 = get_angle(self.looking_at);
-            // draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
+            draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
 
             //visual part:
             let distance:f32 = fix_fish_eye(ray.distance, ray.angle, player_angle);
@@ -89,39 +90,51 @@ impl Player{
         //draw player on the minimap
         draw_circle(self.location.x + BOX_SIZE /2.0, self.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, GREEN);
         self.draw_facing_indicator();
-        return rays;
     }
 
-    pub fn draw_enemy(&self, enemy: Player, rays: Vec<Ray> ){
+    pub fn draw_enemy(&self, enemy: Player,screen: &GameWindow, wall_in_between: bool ){
         //minimap
         draw_circle(enemy.location.x + BOX_SIZE /2.0, enemy.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, RED);
         enemy.draw_facing_indicator();
-        for ray in rays{
-            if ray.angle == get_angle(self.looking_at) {
-                //check ray length with enemy
-                match self.looking_at {
-                    Direction::UP => {
-                        if self.location.y > enemy.location.y && ray.distance > self.location.y - enemy.location.y && enemy.location.x == self.location.x {
-                            println!("I CAN SEE YOU UP!");
-                        }
-                    },
-                    Direction::DOWN => {
-                        if self.location.y < enemy.location.y && ray.distance > enemy.location.y - self.location.y && enemy.location.x == self.location.x {
-                            println!("I CAN SEE YOU DOWN!");
-                        }
-                    },
-                    Direction::LEFT => {
-                        if self.location.x > enemy.location.x && ray.distance > self.location.x - enemy.location.x && enemy.location.y == self.location.y {
-                            println!("I CAN SEE YOU LEFT!");
-                        }
-                    },
-                    Direction::RIGHT => {
-                        if enemy.location.x > self.location.x  && ray.distance > enemy.location.x - self.location.x && enemy.location.y == self.location.y {
-                            println!("I CAN SEE YOU RIGHT!");
-                        }
-                    }
+
+        //visual part
+        let sx = enemy.location.x - self.location.x;
+        let sy = enemy.location.y - self.location.y;
+        let cs = get_angle(self.looking_at).cos();
+        let sn = get_angle(self.looking_at).sin();
+        let a = sy*cs+sx*sn;
+        let b = sx*cs-sy*sn;
+        let distance = (sx.powi(2) + sy.powi(2)).sqrt();
+
+        let (width_center,height_center) = screen.get_visual_screen_center_point();
+
+        let screen_sx = (a*108.0 * 4.0/b) + width_center;
+        let screen_sy = (1.0/b) +  height_center;
+        let mut enemy_in_front = false;
+        match self.looking_at {
+            Direction::UP =>{
+                if enemy.location.y < self.location.y {
+                    enemy_in_front = true;
+                }
+            },
+            Direction::DOWN => {
+                if enemy.location.y > self.location.y {
+                    enemy_in_front = true;
+                }
+            },
+            Direction::LEFT => {
+                if enemy.location.x < self.location.x {
+                    enemy_in_front = true;
+                }
+            },
+            Direction::RIGHT => {
+                if enemy.location.x > self.location.x {
+                    enemy_in_front = true;
                 }
             }
+        };
+        if enemy_in_front && !wall_in_between && screen_sx > screen.visual_window_start_x {
+            draw_circle(screen_sx, screen_sy, (BOX_SIZE/distance) * 100.0, RED);
         }
     }
 

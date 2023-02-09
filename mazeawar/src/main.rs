@@ -52,6 +52,7 @@ async fn main() -> std::io::Result<()> {
     let receiver_clone = sender_clone.clone();
     let (tx, rx) = channel::<Data>();
 
+
     thread::spawn(move || {
         receiver_clone.send_message("connect", json!(""));
         loop {
@@ -61,23 +62,32 @@ async fn main() -> std::io::Result<()> {
     });
 
     let mut data = Data::default();
-    let mut my_point = Point::zero();
+    let mut zero_point = Point::zero();
     // Current display updates based on events, should be from back
     loop {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
         }
-        let mut rays: Vec<Ray> = vec![];
+
         let game_window: GameWindow = data.map.draw(&data.players);
-        let mut me = Player::new(my_point);
+        let mut me = Player::new(zero_point);
+
+        //FIRST FOUND ME IN THE LIST to settle the position
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string() {
                 me = player.clone();
-                rays = me.draw(game_window.clone(), data.map.clone());
-            } else {
-                me.draw_enemy(player.clone(), rays.clone());
+                me.draw(game_window.clone(), data.map.clone());
             }
         }
+        
+        // THEN DRAW ONLY THE ENEMIES
+        for (src, player) in &data.players {
+            if src.to_string() != sender_clone.get_address().to_string() {
+                let wall_in_between: bool = data.map.check_visibility(me.location.clone(), player.location.clone()); 
+                me.draw_enemy(player.clone(), &game_window, wall_in_between);
+            }
+        }
+
 
         listen_move_events(&sender_clone, me, data.map.0.clone());
         if is_key_pressed(KeyCode::Escape) {
@@ -99,11 +109,11 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>) {
         me.turn_right();
         action = true;
     }
-    if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up){
+    if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
         me.step(20.0, map.clone());
         action = true;
     }
-    if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down){
+    if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
         me.step(-20.0, map.clone());
         action = true;
     }

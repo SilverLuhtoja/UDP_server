@@ -28,7 +28,7 @@ impl Map {
     pub fn draw(&self, players: &HashMap<SocketAddr, Player>) -> GameWindow {
         let mut game_window: GameWindow = GameWindow::new();
         let offset: f32 = 0.0;
-        let size: f32 = 20.0;
+        let size: f32 = BOX_SIZE;
         //Draw minimap
         for i in 0..self.height() {
             for j in 0..self.width() {
@@ -55,6 +55,10 @@ impl Map {
 
     pub fn out_of_map_bounce(&self, x: f32, y: f32) ->bool {
         x < 0.0 || x >= self.width() as f32 || y < 0.0 || y >= self.height() as f32
+    }
+
+    pub fn check_visibility(&self, player1: Point, player2: Point) -> bool {
+        return false
     }
 }
 
@@ -99,22 +103,22 @@ impl GameWindow {
     }
 
     
-    // pub fn get_visual_screen_center_point(&self) -> (f32,f32){
-    //     let visual_screen_dimensions = self.get_visual_screen_width_height();
-    //     let visual_screen_starting_points = self.get_visual_screen_starting_point();
-    //     let visual_screen_center_points = (visual_screen_dimensions.0 / 2.0, visual_screen_dimensions.1 / 2.0);
-    //     (visual_screen_starting_points.0 + visual_screen_center_points.0, visual_screen_starting_points.1 + visual_screen_center_points.1)
-    // }
+    pub fn get_visual_screen_center_point(&self) -> (f32,f32){
+        let visual_screen_dimensions = self.get_visual_screen_width_height();
+        let visual_screen_starting_points = self.get_visual_screen_starting_point();
+        let visual_screen_center_points = (visual_screen_dimensions.0 / 2.0, visual_screen_dimensions.1 / 2.0);
+        (visual_screen_starting_points.0 + visual_screen_center_points.0, visual_screen_starting_points.1 + visual_screen_center_points.1)
+    }
 
-    // pub fn get_visual_screen_width_height(&self)-> (f32,f32) {
-    //     let width = self.visual_window_finish_x - self.visual_window_start_x;
-    //     let height= self.visual_window_finish_y - self.visual_window_start_y;
-    //     (width,height)
-    // }
+    pub fn get_visual_screen_width_height(&self)-> (f32,f32) {
+        let width = self.visual_window_finish_x - self.visual_window_start_x;
+        let height= self.visual_window_finish_y - self.visual_window_start_y;
+        (width,height)
+    }
 
-    // pub fn get_visual_screen_starting_point(&self)-> (f32,f32) {
-    //     (self.visual_window_start_x,self.visual_window_start_y)
-    // }
+    pub fn get_visual_screen_starting_point(&self)-> (f32,f32) {
+        (self.visual_window_start_x,self.visual_window_start_y)
+    }
 }
 
 
