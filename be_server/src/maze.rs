@@ -150,31 +150,10 @@ impl Grid {
                     if !self.backtrace.is_empty() {
                         self.current = self.backtrace[0];
                         self.backtrace.remove(0);
-                    } else {
-                        self.adjust_difficulty_level();
+                    }
+                    else {
                         break;
                     }
-                }
-            }
-        }
-    }
-    fn adjust_difficulty_level(&mut self) {
-        //count number of walls that has to be deleted
-        let mut has_to_remove = self.walls * self.difficulty / 100;
-
-        while has_to_remove != 0 {
-            let random_index = thread_rng().gen_range(0..self.cells.len());
-            self.current = random_index;
-            let next = self.find_next_cell(true);
-
-            if let Some(next) = next {
-                let (lower_part, higher_part) =
-                    self.cells.split_at_mut(std::cmp::max(self.current, next));
-                let cell1 = &mut lower_part[std::cmp::min(self.current, next)];
-                let cell2 = &mut higher_part[0];
-                if cell1.remove_wall(cell2) == 1 {
-                    self.walls = self.walls - 1;
-                    has_to_remove = has_to_remove - 1;
                 }
             }
         }
@@ -207,6 +186,8 @@ impl Grid {
                 map.0[row * 2 + 2][col * 2] = WALL;
             }
         };
+        let walls_to_remove = self.walls * self.difficulty / 100;
+        map.remove_walls(walls_to_remove);
         return map;
     }
 
