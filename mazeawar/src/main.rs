@@ -83,7 +83,6 @@ async fn main() -> std::io::Result<()> {
             is_shot = true;
             &sender_clone.send_message("shoot", json!(me));
         }
-
         listen_move_events(&sender_clone, me, data.map.0.clone());
         if is_key_pressed(KeyCode::Escape) {
             sender_clone.send_message("I QUIT", json!(""));

@@ -8,6 +8,7 @@ pub mod convert {
 
 pub mod input {
     use regex::Regex;
+    use crate::miniquad::log;
 
     pub enum InputType {
         Ip,
@@ -44,7 +45,7 @@ pub mod input {
     }
 
     fn validate_ip(input: String) -> bool {
-        let ip_re = Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+").unwrap();
+        let ip_re = Regex::new(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$").unwrap();
         return ip_re.is_match(input.as_str());
     }
 }
