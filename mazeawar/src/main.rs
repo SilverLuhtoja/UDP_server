@@ -45,7 +45,7 @@ async fn main() -> std::io::Result<()> {
 
     //option for tests
     //to test this has to be changed to local ip address
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
+    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 8, 102)), 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
@@ -60,10 +60,11 @@ async fn main() -> std::io::Result<()> {
             tx.send(received_data).unwrap()
         }
     });
-
+    
+    let zero_point = Point::zero();
     let mut data = Data::default();
-    let mut zero_point = Point::zero();
     let mut is_shot = false;
+    let mut shooting_timer = 0;
     // Current display updates based on events, should be from back
     loop {
         if let Ok(received_data) = rx.try_recv() {
@@ -91,11 +92,17 @@ async fn main() -> std::io::Result<()> {
         }
 
 
-        is_shot = false;
-        if is_key_down(KeyCode::Space) {
+        //  IT IS UGLY FIX :D 
+        if shooting_timer <= 0 {
+            is_shot = false;
+        }else{
             me.shoot(data.map.0.clone());
+            shooting_timer -= 1;
+        }
+        if is_key_pressed(KeyCode::Space) {
             is_shot = true;
-            &sender_clone.send_message("shoot", json!(me));
+            shooting_timer = 20;
+            sender_clone.send_message("shoot", json!(me));
         }
         listen_move_events(&sender_clone, me, data.map.0.clone(), enemy_positions);
         if is_key_pressed(KeyCode::Escape) {
@@ -118,10 +125,10 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>, e
         action = true;
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
-        action = me.step(20.0, map.clone(), enemy_positions.clone());
+        action = me.step(BOX_SIZE, map.clone(), enemy_positions.clone());
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
-        action = me.step(-20.0, map.clone(), enemy_positions.clone());
+        action = me.step(-BOX_SIZE, map.clone(), enemy_positions.clone());
     }
     if action {
         client.send_message("movement", json!(me))

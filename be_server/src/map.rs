@@ -1,4 +1,4 @@
-use crate::player::Point;
+use crate::{player::Point, BOX_SIZE};
 use r::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
@@ -12,9 +12,15 @@ impl Map {
     pub fn new(width: usize, height: usize) -> Self {
         Self(vec![vec![0; width]; height])
     }
+
+    pub fn new_from_arr(map: Vec<Vec<i32>>) -> Self{
+        Self(map)
+    }
+
     pub fn width(&self) -> usize {
         self.0[0].len()
     }
+
     pub fn height(&self) -> usize {
         self.0.len()
     }
@@ -24,10 +30,11 @@ impl Map {
             let row = thread_rng().gen_range(1..self.height() - 1);
             let column = thread_rng().gen_range(1..self.width() - 1);
             if self.0[row][column] == FLOOR {
-                return Point::new(column as f32 * 20.0, row as f32 * 20.0);
+                return Point::new(column as f32 * BOX_SIZE, row as f32 * BOX_SIZE);
             }
         }
     }
+
     pub fn remove_walls(&mut self, mut nb: i32) {
         while nb != 0 {
             let x = thread_rng().gen_range(1..(self.width() - 1));
@@ -40,5 +47,9 @@ impl Map {
                 nb -= 1;
             }
         }
+    }
+
+    pub fn is_wall(&self, row: f32, column: f32) -> bool{
+        self.0[row as usize][column as usize] == 1
     }
 }
