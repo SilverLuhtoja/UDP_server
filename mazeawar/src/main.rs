@@ -41,13 +41,13 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     //option for prod
     //add user input for server ip and user name
-    // let input_ip = input::read("Enter IP address: ".to_string(), input::InputType::Ip);
-    // let server_addr = convert::to_ip(input_ip);
-    // let user_name = input::read("Enter Name:  ".to_string(), input::InputType::Name);
+    let input_ip = input::read("Enter IP address: ".to_string(), input::InputType::Ip);
+    let server_addr = convert::to_ip(input_ip);
+    let user_name = input::read("Enter Name:  ".to_string(), input::InputType::Name);
 
     //option for tests
     //to test this has to be changed to local ip address
-    let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
+    // let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
@@ -82,7 +82,7 @@ async fn main() -> std::io::Result<()> {
                 me.draw(game_window.clone(), data.map.clone(), is_shot);
             }
         }
-        
+
         // THEN DRAW ONLY THE ENEMIES
         for (src, player) in &data.players {
             if src.to_string() != sender_clone.get_address().to_string() {
