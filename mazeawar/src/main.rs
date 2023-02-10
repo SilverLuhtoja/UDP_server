@@ -8,6 +8,7 @@ use std::process::exit;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::thread;
+use local_ip_address::local_ip;
 use macroquad::prelude::*;
 use serde_json::*;
 use regex::Regex;
@@ -41,13 +42,15 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     //option for prod
     //add user input for server ip and user name
-    let input_ip = input::read("Enter IP address: ".to_string(), input::InputType::Ip);
-    let server_addr = convert::to_ip(input_ip);
-    let user_name = input::read("Enter Name:  ".to_string(), input::InputType::Name);
+    // let input_ip = input::read("Enter IP address: ".to_string(), input::InputType::Ip);
+    // let server_addr = convert::to_ip(input_ip);
+    // let user_name = input::read("Enter Name:  ".to_string(), input::InputType::Name);
 
     //option for tests
     //to test this has to be changed to local ip address
     // let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
+    let my_local_ip = local_ip().unwrap();
+    let server_addr: SocketAddr = SocketAddr::new(my_local_ip, 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);

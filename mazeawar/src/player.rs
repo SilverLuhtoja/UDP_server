@@ -127,12 +127,12 @@ impl Player {
     }
 
     pub fn draw_facing_indicator(&self) {
-        let i_size: f32 = 5.0;
+        let indicator_size: f32 = 5.0;
         match self.looking_at {
-            Direction::UP => draw_rectangle(self.get_center_x() - i_size/2.0 , self.get_center_y() - BOX_SIZE / 2.0, i_size, i_size, RED),
-            Direction::DOWN => draw_rectangle(self.get_center_x() - i_size/2.0, self.get_center_y() + BOX_SIZE / 4.0, i_size, i_size, RED),
-            Direction::LEFT => draw_rectangle(self.get_center_x() - BOX_SIZE / 2.0, self.get_center_y() - i_size/2.0, i_size, i_size, RED),
-            Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE / 4.0, self.get_center_y() - i_size/2.0, i_size, i_size, RED)
+            Direction::UP => draw_rectangle(self.get_center_x() - indicator_size/2.0 , self.get_center_y() - BOX_SIZE / 2.0, indicator_size, indicator_size, RED),
+            Direction::DOWN => draw_rectangle(self.get_center_x() - indicator_size/2.0, self.get_center_y() + BOX_SIZE / 4.0, indicator_size, indicator_size, RED),
+            Direction::LEFT => draw_rectangle(self.get_center_x() - BOX_SIZE / 2.0, self.get_center_y() - indicator_size/2.0, indicator_size, indicator_size, RED),
+            Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE / 4.0, self.get_center_y() - indicator_size/2.0, indicator_size, indicator_size, RED)
         }
     }
 
