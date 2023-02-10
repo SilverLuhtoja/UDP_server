@@ -57,8 +57,59 @@ impl Map {
         x < 0.0 || x >= self.width() as f32 || y < 0.0 || y >= self.height() as f32
     }
 
-    pub fn check_visibility(&self, player1: Point, player2: Point) -> bool {
-        return false
+    pub fn check_visibility(&self, player1: Player, player2: Player) -> bool {
+        let mut pl1_x = player1.location.x / BOX_SIZE;
+        let mut pl1_y = player1.location.y / BOX_SIZE;
+        let pl2_x = player2.location.x / BOX_SIZE;
+        let pl2_y = player2.location.y / BOX_SIZE;
+        let mut visible = false;
+        match player1.looking_at{
+            Direction::UP => {
+                if player1.location.y > player2.location.y && player1.location.x == player2.location.x {
+                    visible = true;
+                    while pl1_y >= pl2_y {
+                        if self.0[pl1_y as usize][pl1_x as usize] == 1 {
+                            visible = false;
+                        }
+                        pl1_y -= 1.0;
+                    }
+                }
+            },
+            Direction::DOWN => {
+                if player1.location.y < player2.location.y && player1.location.x == player2.location.x {
+                    visible = true;
+                    while pl1_y <= pl2_y {
+                        if self.0[pl1_y as usize][pl1_x as usize] == 1 {
+                            visible = false;
+                        }
+                        pl1_y += 1.0;
+                    }
+                }
+            },
+            Direction::LEFT => {
+                if player1.location.x > player2.location.x && player1.location.y == player2.location.y {
+                    visible = true;
+                    while pl1_x >= pl2_x {
+                        if self.0[pl1_y as usize][pl1_x as usize] == 1 {
+                            visible = false;
+                        }
+                        pl1_x -= 1.0;
+                    }
+                }
+            },
+            Direction::RIGHT => {
+                if player1.location.x < player2.location.x && player1.location.y == player2.location.y {
+                    visible = true;
+                    while pl1_x <= pl2_x {
+                        if self.0[pl1_y as usize][pl1_x as usize] == 1 {
+                            visible = false;
+                        }
+                        pl1_x += 1.0;
+                    }
+                }
+            },
+        }
+        return visible;
     }
 }
 
@@ -154,9 +205,9 @@ impl ScoreBoard{
         );
         let mut y_addition = BOX_SIZE;
         for (_, player) in self.players.clone() {
-            draw_text(&player.username.clone(), self.start_x + BOX_SIZE, self.start_y + y_addition, 20.0, BLACK); //name
-            draw_text(&player.score.to_string(), self.start_x + BOX_SIZE * 10.0, self.start_y + y_addition, 20.0, BLACK); //score
-            y_addition += 20.0;
+            draw_text(&player.username.clone(), self.start_x + BOX_SIZE, self.start_y + y_addition, BOX_SIZE, BLACK); //name
+            draw_text(&player.score.to_string(), self.start_x + BOX_SIZE * 10.0, self.start_y + y_addition, BOX_SIZE, BLACK); //score
+            y_addition += BOX_SIZE;
         }
     
     }
