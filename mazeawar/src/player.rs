@@ -4,9 +4,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::ray::*;
 use crate::map::*;
-use crate::miniquad::gl::user_addr_t;
+use std::collections::HashMap;
+// use crate::miniquad::gl::user_addr_t;
 
 const FOV: f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)-> to_radians(60.0)
+
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum Direction {
@@ -16,8 +18,8 @@ pub enum Direction {
     RIGHT,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
-pub struct Point {
+#[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
+pub struct Point{
     pub x: f32,
     pub y: f32,
 }
@@ -51,58 +53,100 @@ impl Player {
         Self {
             location,
             looking_at: Direction::UP,
-            username: "default name".to_string(),
-            score: 15,
-        }
+            username: "".to_string(),
+            score: 0,
+        }        
     }
 
-    pub fn draw(&self, me: bool, game_window: GameWindow, map: Map, is_shot: bool) {
+    pub fn draw(&self, game_window: GameWindow, map: Map, is_shot: bool){
         let mut player_color: macroquad::color::Color = RED;
         let mut rays: Vec<Ray> = vec![];
         let mut offset_height: f32 = 0.0;
-        if me {
-            //player color on the minimap
-            player_color = GREEN;
 
-            //line to separate map and visual
-            draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
+        //line to separate map and visual
+        draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
 
-            // Draw rays from player on minimap and visual part
-            for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
-                //on minimap
-                let start_x: f32 = self.location.x + BOX_SIZE / 2.0;
-                let start_y: f32 = self.location.y + BOX_SIZE / 2.0;
-                let player_angle: f32 = get_angle(self.looking_at);
-                draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
+        // Draw rays from player on minimap and visual part
+        for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
+            //on minimap
+            let start_x: f32 = self.location.x + BOX_SIZE / 2.0;
+            let start_y: f32 = self.location.y + BOX_SIZE / 2.0;
+            let player_angle: f32 = get_angle(self.looking_at);
+            draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
 
-                //visual part:
-                let distance = fix_fish_eye(ray.distance, ray.angle, player_angle);
-                let wall_height = ((BOX_SIZE * 5.0) / distance) * 70.0;
+            //visual part:
+            let distance = fix_fish_eye(ray.distance, ray.angle, player_angle);
+            let wall_height = ((BOX_SIZE * 5.0) / distance) * 70.0;
 
-                if ray.angle == get_angle(self.looking_at) {
-                    rays.push(ray.clone());
-                    offset_height = ((BOX_SIZE * 5.0) / distance) * 70.0
-                }
-
-                let mut wall_color: macroquad::color::Color = LIGHTGRAY;
-                if ray.vertical {
-                    wall_color = GRAY;
-                }
-                //wall
-                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, 1.0, wall_height, wall_color);
-                //floor
-                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y / 2.0 + wall_height / 2.0, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, BEIGE);
-                //ceiling
-                draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, WHITE);
+            if ray.angle == get_angle(self.looking_at) {
+                rays.push(ray.clone());
+                offset_height = ((BOX_SIZE * 5.0) / distance) * 70.0
             }
-            if is_shot {
-                let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
-                draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0 + offset_height / 2.0, 5.0, GREEN);
+
+            let mut wall_color: macroquad::color::Color = LIGHTGRAY;
+            if ray.vertical {
+                wall_color = GRAY;
             }
+            //wall
+            draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, 1.0, wall_height, wall_color);
+            //floor
+            draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y / 2.0 + wall_height / 2.0, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, BEIGE);
+            //ceiling
+            draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, WHITE);
+        }
+        if is_shot {
+            let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
+            draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0 + offset_height / 2.0, 5.0, GREEN);
         }
         //draw player on the minimap
-        draw_circle(self.location.x + BOX_SIZE / 2.0, self.location.y + BOX_SIZE / 2.0, BOX_SIZE / 4.0, player_color);
+        draw_circle(self.location.x + BOX_SIZE /2.0, self.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, GREEN);
         self.draw_facing_indicator();
+    }
+
+    pub fn draw_enemy(&self, enemy: Player,screen: &GameWindow, wall_in_between: bool ){
+        //minimap
+        draw_circle(enemy.location.x + BOX_SIZE /2.0, enemy.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, RED);
+        enemy.draw_facing_indicator();
+
+        //visual part
+        let sx = enemy.location.x - self.location.x;
+        let sy = enemy.location.y - self.location.y;
+        let cs = get_angle(self.looking_at).cos();
+        let sn = get_angle(self.looking_at).sin();
+        let a = sy*cs+sx*sn;
+        let b = sx*cs-sy*sn;
+        let distance = (sx.powi(2) + sy.powi(2)).sqrt();
+
+        let (width_center,height_center) = screen.get_visual_screen_center_point();
+
+        let screen_sx = (a*108.0 * 4.0/b) + width_center;
+        let screen_sy = (1.0/b) +  height_center;
+        let mut enemy_in_front = false;
+        match self.looking_at {
+            Direction::UP =>{
+                if enemy.location.y < self.location.y {
+                    enemy_in_front = true;
+                }
+            },
+            Direction::DOWN => {
+                if enemy.location.y > self.location.y {
+                    enemy_in_front = true;
+                }
+            },
+            Direction::LEFT => {
+                if enemy.location.x < self.location.x {
+                    enemy_in_front = true;
+                }
+            },
+            Direction::RIGHT => {
+                if enemy.location.x > self.location.x {
+                    enemy_in_front = true;
+                }
+            }
+        };
+        if enemy_in_front && !wall_in_between && screen_sx > screen.visual_window_start_x {
+            draw_circle(screen_sx, screen_sy, (BOX_SIZE/distance) * 100.0, RED);
+        }
     }
 
     pub fn draw_facing_indicator(&self) {
@@ -115,7 +159,7 @@ impl Player {
         }
     }
 
-    pub fn set_postion(&mut self, point: Point) {
+    pub fn set_position(&mut self, point: Point){
         self.location = point;
     }
     pub fn get_center_x(&self) -> f32 {
@@ -133,6 +177,7 @@ impl Player {
             Direction::RIGHT => self.looking_at = Direction::UP,
         }
     }
+
     pub fn turn_right(&mut self) {
         match self.looking_at {
             Direction::UP => self.looking_at = Direction::RIGHT,
@@ -141,7 +186,8 @@ impl Player {
             Direction::RIGHT => self.looking_at = Direction::DOWN,
         }
     }
-    pub fn step(&mut self, step: f32, map: Vec<Vec<i32>>) {
+
+    pub fn step(&mut self, step: f32, map: Vec<Vec<i32>>, enemy_positions: Vec<Point>) -> bool {
         let mut new_point: Point = self.location.clone();
         match self.looking_at {
             Direction::LEFT => {
@@ -157,9 +203,17 @@ impl Player {
                 new_point.y += step;
             }
         }
-        if can_step(new_point, map) {
+        let mut empty = true;
+        for point in enemy_positions {
+            if point.x == new_point.x && point.y == new_point.y {
+                empty = false;
+            }
+        }
+
+        if can_step(new_point, map.clone()) && empty {
             self.location = new_point;
         }
+        return can_step(new_point, map.clone()) && empty;
     }
 
     /* Get 60degree FOV (field of view) rays from player position */
@@ -178,6 +232,7 @@ impl Player {
         }
         return result;
     }
+
     //shooting
     pub fn shoot(&self, map: Vec<Vec<i32>>) {
         let (x, y) = self.get_tiles();
@@ -217,14 +272,17 @@ impl Player {
         }
         self.animate_shoot(final_point_x, final_point_y);
     }
+
     fn get_tiles(&self) -> (i32, i32) {
         return (round::floor((self.location.x / BOX_SIZE) as f64, 0) as i32,
                 round::floor((self.location.y / BOX_SIZE) as f64, 0) as i32);
     }
+
     pub fn animate_shoot(&self, final_x: f32, final_y: f32) {
         draw_line(self.get_center_x(), self.get_center_y(), final_x, final_y, 5.0, VIOLET);
     }
 }
+
 /*get radians from direction*/
 pub fn get_angle(direction: Direction) -> f32 {
     match direction {

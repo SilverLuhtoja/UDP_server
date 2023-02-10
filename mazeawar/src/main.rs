@@ -18,6 +18,7 @@ use crate::client_server::*;
 use crate::player::*;
 use crate::utils::*;
 use crate::map::GameWindow;
+use crate::ray::Ray;
 
 mod client_server;
 mod map;
@@ -29,7 +30,7 @@ mod ray;
 fn window_conf() -> Conf {
     Conf {
         window_title: "MAZE".to_owned(),
-        fullscreen: true,
+        fullscreen: false,
         ..Default::default()
     }
 }
@@ -44,12 +45,13 @@ async fn main() -> std::io::Result<()> {
 
     //option for tests
     //to test this has to be changed to local ip address
-    // let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 0, 43)), 4242);
+    // let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
     let receiver_clone = sender_clone.clone();
     let (tx, rx) = channel::<Data>();
+
 
     thread::spawn(move || {
         receiver_clone.send_message("connect", json!(""));
@@ -60,30 +62,42 @@ async fn main() -> std::io::Result<()> {
     });
 
     let mut data = Data::default();
-    let mut my_point = Point::zero();
+    let mut zero_point = Point::zero();
     let mut is_shot = false;
     // Current display updates based on events, should be from back
     loop {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
         }
+
         let game_window: GameWindow = data.map.draw(&data.players);
-        let mut me = Player::new(my_point);
+        let mut me = Player::new(zero_point);
+        let mut enemy_positions: Vec<Point> = vec![];
+        //FIRST FOUND ME IN THE LIST to settle the position
         for (src, player) in &data.players {
             if src.to_string() == sender_clone.get_address().to_string() {
                 me = player.clone();
-                player.draw(true, game_window.clone(), data.map.clone(), is_shot);
-            } else{
-                player.draw(false, game_window.clone(), data.map.clone(), false);
+                me.draw(game_window.clone(), data.map.clone(), is_shot);
             }
         }
+
+        // THEN DRAW ONLY THE ENEMIES
+        for (src, player) in &data.players {
+            if src.to_string() != sender_clone.get_address().to_string() {
+                let wall_in_between: bool = data.map.check_visibility(me.location.clone(), player.location.clone());
+                me.draw_enemy(player.clone(), &game_window, wall_in_between);
+                enemy_positions.push(player.location.clone());
+            }
+        }
+
+
         is_shot = false;
         if is_key_down(KeyCode::Space) {
             me.shoot(data.map.0.clone());
             is_shot = true;
             &sender_clone.send_message("shoot", json!(me));
         }
-        listen_move_events(&sender_clone, me, data.map.0.clone());
+        listen_move_events(&sender_clone, me, data.map.0.clone(), enemy_positions);
         if is_key_pressed(KeyCode::Escape) {
             sender_clone.send_message("I QUIT", json!(""));
             exit(1)
@@ -93,7 +107,7 @@ async fn main() -> std::io::Result<()> {
     }
 }
 
-pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>) {
+pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>, enemy_positions: Vec<Point>) {
     let mut action:bool = false;
     if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
         me.turn_left();
@@ -103,13 +117,11 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>) {
         me.turn_right();
         action = true;
     }
-    if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up){
-        me.step(20.0, map.clone());
-        action = true;
+    if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
+        action = me.step(20.0, map.clone(), enemy_positions.clone());
     }
-    if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down){
-        me.step(-20.0, map.clone());
-        action = true;
+    if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
+        action = me.step(-20.0, map.clone(), enemy_positions.clone());
     }
     if action {
         client.send_message("movement", json!(me))
