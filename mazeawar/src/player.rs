@@ -138,8 +138,7 @@ impl Player {
         }
     }
     
-    pub fn step(&mut self, step: (f32, f32), map: &Map, enemy_positions: &Vec<Point>) -> bool {
-        
+    pub fn make_move(&mut self, step: (f32, f32), map: &Map, enemy_positions: &Vec<Point>) -> bool {
         let new_point = add_difference((self.location.x,self.location.y), step);
         
         for point in enemy_positions {
@@ -150,8 +149,9 @@ impl Player {
         
         if can_step(new_point, map){
             self.location = Point::new(new_point.0,new_point.1);
+            return true
         }
-        return true
+        false
     }
     
     pub fn step_difference(&self)  -> (f32,f32){

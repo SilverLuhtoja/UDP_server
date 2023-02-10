@@ -121,24 +121,22 @@ async fn main() -> std::io::Result<()> {
 }
 
 pub fn listen_move_events(client: &Client, mut me: Player, map: &Map, enemy_positions: &Vec<Point>) {
-    let mut action:bool = false;
+    let me_before_move = me.clone();
     if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
         me.turn_left();
-        action = true;
     }
     if is_key_pressed(KeyCode::D) || is_key_pressed(KeyCode::Right) {
         me.turn_right();
-        action = true;
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
         let step =  me.step_difference();
-        action = me.step(step, map, enemy_positions);
+        me.make_move(step, map, enemy_positions);
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
         let step = reverse_difference(me.step_difference());
-        action = me.step(step, map, enemy_positions);
+        me.make_move(step, map, enemy_positions);
     }
-    if action {
+    if me_before_move != me {
         client.send_message("movement", json!(me))
     }
 }
