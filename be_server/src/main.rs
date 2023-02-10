@@ -7,7 +7,7 @@ mod server;
 
 use crate::maze::{Grid, HIGH, LOW, MEDIUM};
 use crate::server::*;
-use player::{Player, Point};
+use player::Player;
 use serde_json::json;
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -39,6 +39,20 @@ async fn main() -> std::io::Result<()> {
             let current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
             let player:Player = serde_json::from_value(data.data)?;
             *current_player = player;
+        }
+
+        if data.message_type == "shoot" {
+            let shooter = players.get(&src).expect("ADD PLAYER < NOT IN HASH >");
+            let mut cloned = players.clone();
+            for (addr,player) in &players{
+                if &src != addr && shooter.is_target_aligned(&player.clone()) {
+                        if shooter.is_hit(&player, &map) {
+                            let target =  cloned.get_mut(&addr).expect("ADD PLAYER < NOT IN HASH >");
+                            target.location = map.get_spawn().await;
+                    }
+                }
+            }
+            players = cloned;
         }
         
         message.players = players.clone();
