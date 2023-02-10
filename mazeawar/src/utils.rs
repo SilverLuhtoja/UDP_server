@@ -18,26 +18,29 @@ pub mod input {
     pub fn read(mut message: String, input_type: InputType) -> String {
         use std::io::{stdin, stdout, Write};
         let mut input = String::new();
+        let mut res = String::new();
         loop {
             input = String::new();
+            res = String::new();
             print!("{}", message);
             let _ = stdout().flush();
             stdin().read_line(&mut input).expect("Did not enter a correct string");
             if let Some('\n') = input.chars().next_back() {
                 input.pop();
             }
+            res = input.trim().to_string();
             match input_type {
                 InputType::Ip => {
-                    if validate_ip(input.clone()) { break; }
+                    if validate_ip(res.clone()) { break; }
                     message = "Entered IP is incorrect. Try again: ".to_string();
                 }
                 InputType::Name => {
-                    if validate_user_name(input.clone()) { break; }
+                    if validate_user_name(res.clone()) { break; }
                     message = "Entered name is too short. Try again: ".to_string();
                 }
             }
         }
-        return input;
+        return res;
     }
 
     fn validate_user_name(name: String) -> bool {
