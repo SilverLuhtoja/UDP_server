@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{map::Map, BOX_SIZE};
+use crate::{map::{Map, BOX_SIZE}};
 
 #[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum  Direction {

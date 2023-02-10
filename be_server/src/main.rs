@@ -12,8 +12,6 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 
-const BOX_SIZE:f32 = 20.0;
-
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let server= Server::new().await;

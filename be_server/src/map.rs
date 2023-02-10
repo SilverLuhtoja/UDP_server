@@ -1,4 +1,4 @@
-use crate::{player::Point, BOX_SIZE};
+use crate::{player::Point};
 use r::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
