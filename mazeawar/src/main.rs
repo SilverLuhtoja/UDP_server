@@ -131,10 +131,12 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: &Map, enemy_posi
         action = true;
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
-        action = me.step(map, enemy_positions);
+        let step =  me.step_difference();
+        action = me.step(step, map, enemy_positions);
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
-        action = me.step(map, enemy_positions);
+        let step = reverse_difference(me.step_difference());
+        action = me.step(step, map, enemy_positions);
     }
     if action {
         client.send_message("movement", json!(me))

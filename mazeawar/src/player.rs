@@ -138,9 +138,9 @@ impl Player {
         }
     }
     
-    pub fn step(&mut self, map: &Map, enemy_positions: &Vec<Point>) -> bool {
-        let difference = self.looking_difference();
-        let new_point = add_difference((self.location.x,self.location.y), difference);
+    pub fn step(&mut self, step: (f32, f32), map: &Map, enemy_positions: &Vec<Point>) -> bool {
+        
+        let new_point = add_difference((self.location.x,self.location.y), step);
         
         for point in enemy_positions {
             if point.x == new_point.0 && point.y == new_point.1 {
@@ -154,7 +154,7 @@ impl Player {
         return true
     }
     
-    fn looking_difference(&self)  -> (f32,f32){
+    pub fn step_difference(&self)  -> (f32,f32){
         match self.looking_at{
             Direction::UP => {(0.0,-BOX_SIZE)},
             Direction::DOWN => {(0.0,BOX_SIZE)},
@@ -162,6 +162,7 @@ impl Player {
             Direction::RIGHT => {(BOX_SIZE,0.0)},
         }
     }
+
     pub fn turn_left(&mut self) {
         match self.looking_at {
             Direction::UP => self.looking_at = Direction::LEFT,
@@ -272,3 +273,6 @@ pub fn add_difference(x:(f32,f32), y:(f32,f32)) -> (f32,f32){
     (x.0+y.0,x.1+y.1)
 }
 
+pub fn reverse_difference(x:(f32,f32)) -> (f32,f32){
+    (x.0 * -1.0, x.1 * -1.0)
+}
