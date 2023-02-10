@@ -44,7 +44,7 @@ impl Point {
     }
 }
 
-pub const BOX_SIZE: f32 = 20.0;
+pub const BOX_SIZE: f32 = 15.0;
 
 impl Player {
     pub fn new(location: Point) -> Self {
@@ -70,7 +70,7 @@ impl Player {
 
             //visual part:
             let distance = fix_fish_eye(ray.distance, ray.angle, player_angle);
-            let wall_height = ((BOX_SIZE * 5.0) / distance) * 70.0;
+            let wall_height = ((BOX_SIZE * 5.0) / distance) * 150.0;
 
             let mut wall_color: macroquad::color::Color = LIGHTGRAY;
             if ray.vertical {
@@ -94,59 +94,36 @@ impl Player {
         self.draw_facing_indicator();
     }
 
-    pub fn draw_enemy(&self, enemy: Player,screen: &GameWindow, wall_in_between: bool ){
+    pub fn draw_enemy(&self, enemy: Player,screen: &GameWindow, visible: bool ){
         //minimap
         draw_circle(enemy.location.x + BOX_SIZE /2.0, enemy.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, RED);
         enemy.draw_facing_indicator();
 
-        //visual part
-        let sx = enemy.location.x - self.location.x;
-        let sy = enemy.location.y - self.location.y;
-        let cs = get_angle(self.looking_at).cos();
-        let sn = get_angle(self.looking_at).sin();
-        let a = sy*cs+sx*sn;
-        let b = sx*cs-sy*sn;
-        let distance = (sx.powi(2) + sy.powi(2)).sqrt();
-
-        let (width_center,height_center) = screen.get_visual_screen_center_point();
-
-        let screen_sx = (a*108.0 * 4.0/b) + width_center;
-        let screen_sy = (1.0/b) +  height_center;
-        let mut enemy_in_front = false;
-        match self.looking_at {
-            Direction::UP =>{
-                if enemy.location.y < self.location.y {
-                    enemy_in_front = true;
-                }
-            },
-            Direction::DOWN => {
-                if enemy.location.y > self.location.y {
-                    enemy_in_front = true;
-                }
-            },
-            Direction::LEFT => {
-                if enemy.location.x < self.location.x {
-                    enemy_in_front = true;
-                }
-            },
-            Direction::RIGHT => {
-                if enemy.location.x > self.location.x {
-                    enemy_in_front = true;
-                }
-            }
-        };
-        if enemy_in_front && !wall_in_between && screen_sx > screen.visual_window_start_x {
+        //visual part    
+        if visible {
+            let sx = enemy.location.x - self.location.x;
+            let sy = enemy.location.y - self.location.y;
+            let cs = get_angle(self.looking_at).cos();
+            let sn = get_angle(self.looking_at).sin();
+            let a = sy*cs+sx*sn;
+            let b = sx*cs-sy*sn;
+            let distance = (sx.powi(2) + sy.powi(2)).sqrt();
+    
+            let (width_center,height_center) = screen.get_visual_screen_center_point();
+    
+            let screen_sx = (a*108.0 * 4.0/b) + width_center;
+            let screen_sy = (1.0/b) +  height_center;
             draw_circle(screen_sx, screen_sy, (BOX_SIZE/distance) * 100.0, RED);
         }
     }
 
     pub fn draw_facing_indicator(&self) {
-        let middle_offset: f32 = 7.5;
+        let i_size: f32 = 5.0;
         match self.looking_at {
-            Direction::UP => draw_rectangle(self.location.x + middle_offset, self.get_center_y() - BOX_SIZE / 2.0, 5.0, 5.0, RED),
-            Direction::DOWN => draw_rectangle(self.location.x + middle_offset, self.get_center_y() + BOX_SIZE / 2.0, 5.0, 5.0, RED),
-            Direction::LEFT => draw_rectangle(self.get_center_x() - BOX_SIZE / 2.0, self.location.y + middle_offset, 5.0, 5.0, RED),
-            Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE / 2.0, self.location.y + middle_offset, 5.0, 5.0, RED)
+            Direction::UP => draw_rectangle(self.get_center_x() - i_size/2.0 , self.get_center_y() - BOX_SIZE / 2.0, i_size, i_size, RED),
+            Direction::DOWN => draw_rectangle(self.get_center_x() - i_size/2.0, self.get_center_y() + BOX_SIZE / 4.0, i_size, i_size, RED),
+            Direction::LEFT => draw_rectangle(self.get_center_x() - BOX_SIZE / 2.0, self.get_center_y() - i_size/2.0, i_size, i_size, RED),
+            Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE / 4.0, self.get_center_y() - i_size/2.0, i_size, i_size, RED)
         }
     }
 

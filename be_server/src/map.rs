@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 pub const WALL: i32 = 1;
 const FLOOR: i32 = 0;
+pub const BOX_SIZE: f32 = 15.0;
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Map(pub Vec<Vec<i32>>);
