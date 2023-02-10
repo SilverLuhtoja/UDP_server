@@ -62,10 +62,11 @@ async fn main() -> std::io::Result<()> {
             tx.send(received_data).unwrap()
         }
     });
-
+    
+    let zero_point = Point::zero();
     let mut data = Data::default();
-    let mut zero_point = Point::zero();
     let mut is_shot = false;
+    let mut shooting_timer = 0;
     // Current display updates based on events, should be from back
     loop {
         if let Ok(received_data) = rx.try_recv() {
@@ -93,11 +94,17 @@ async fn main() -> std::io::Result<()> {
         }
 
 
-        is_shot = false;
-        if is_key_down(KeyCode::Space) {
+        //  IT IS UGLY FIX :D 
+        if shooting_timer <= 0 {
+            is_shot = false;
+        }else{
             me.shoot(data.map.0.clone());
+            shooting_timer -= 1;
+        }
+        if is_key_pressed(KeyCode::Space) {
             is_shot = true;
-            &sender_clone.send_message("shoot", json!(me));
+            shooting_timer = 20;
+            sender_clone.send_message("shoot", json!(me));
         }
         listen_move_events(&sender_clone, me, data.map.0.clone(), enemy_positions);
         if is_key_pressed(KeyCode::Escape) {

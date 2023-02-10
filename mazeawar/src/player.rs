@@ -4,8 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::ray::*;
 use crate::map::*;
-use std::collections::HashMap;
-// use crate::miniquad::gl::user_addr_t;
 
 const FOV: f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)-> to_radians(60.0)
 
@@ -59,10 +57,6 @@ impl Player {
     }
 
     pub fn draw(&self, game_window: GameWindow, map: Map, is_shot: bool){
-        let mut player_color: macroquad::color::Color = RED;
-        let mut rays: Vec<Ray> = vec![];
-        let mut offset_height: f32 = 0.0;
-
         //line to separate map and visual
         draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
 
@@ -78,11 +72,6 @@ impl Player {
             let distance = fix_fish_eye(ray.distance, ray.angle, player_angle);
             let wall_height = ((BOX_SIZE * 5.0) / distance) * 150.0;
 
-            if ray.angle == get_angle(self.looking_at) {
-                rays.push(ray.clone());
-                offset_height = ((BOX_SIZE * 5.0) / distance) * 70.0
-            }
-
             let mut wall_color: macroquad::color::Color = LIGHTGRAY;
             if ray.vertical {
                 wall_color = GRAY;
@@ -93,10 +82,12 @@ impl Player {
             draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_finish_y / 2.0 + wall_height / 2.0, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, BEIGE);
             //ceiling
             draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, WHITE);
-        }
-        if is_shot {
-            let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
-            draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0 + offset_height / 2.0, 5.0, GREEN);
+
+
+            if is_shot {
+                let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
+                draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0 + wall_height / 2.0, 5.0, GREEN);
+            }
         }
         //draw player on the minimap
         draw_circle(self.location.x + BOX_SIZE /2.0, self.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, GREEN);
