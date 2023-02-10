@@ -57,7 +57,7 @@ impl Map {
         x < 0.0 || x >= self.width() as f32 || y < 0.0 || y >= self.height() as f32
     }
 
-    pub fn check_visibility(&self, player1: Player, player2: Player) -> bool {
+    pub fn check_visibility(&self, player1: &Player, player2: &Player) -> bool {
         let mut pl1_x = player1.location.x / BOX_SIZE;
         let mut pl1_y = player1.location.y / BOX_SIZE;
         let pl2_x = player2.location.x / BOX_SIZE;

@@ -56,16 +56,25 @@ impl Player {
         }        
     }
 
-    pub fn draw(&self, game_window: GameWindow, map: Map, is_shot: bool){
-        //line to separate map and visual
-        draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
+    pub fn set_position(&mut self, point: Point){
+        self.location = point;
+    }
 
+    pub fn get_center_x(&self) -> f32 {
+        self.location.x + BOX_SIZE / 2.0
+    }
+
+    pub fn get_center_y(&self) -> f32 {
+        self.location.y + BOX_SIZE / 2.0
+    }
+
+    pub fn draw(&self, game_window: GameWindow, map: Map, is_shot: bool){
         // Draw rays from player on minimap and visual part
         for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
             //on minimap
             let start_x: f32 = self.location.x + BOX_SIZE / 2.0;
             let start_y: f32 = self.location.y + BOX_SIZE / 2.0;
-            let player_angle: f32 = get_angle(self.looking_at);
+            let player_angle: f32 = looking_direction_to_radians(self.looking_at);
             draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
 
             //visual part:
@@ -89,6 +98,8 @@ impl Player {
                 draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0 + wall_height / 2.0, 5.0, GREEN);
             }
         }
+        //line to separate map and visual
+        draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
         //draw player on the minimap
         draw_circle(self.location.x + BOX_SIZE /2.0, self.location.y + BOX_SIZE/2.0, BOX_SIZE/4.0, GREEN);
         self.draw_facing_indicator();
@@ -103,8 +114,8 @@ impl Player {
         if visible {
             let sx = enemy.location.x - self.location.x;
             let sy = enemy.location.y - self.location.y;
-            let cs = get_angle(self.looking_at).cos();
-            let sn = get_angle(self.looking_at).sin();
+            let cs = looking_direction_to_radians(self.looking_at).cos();
+            let sn = looking_direction_to_radians(self.looking_at).sin();
             let a = sy*cs+sx*sn;
             let b = sx*cs-sy*sn;
             let distance = (sx.powi(2) + sy.powi(2)).sqrt();
@@ -120,23 +131,37 @@ impl Player {
     pub fn draw_facing_indicator(&self) {
         let indicator_size: f32 = 5.0;
         match self.looking_at {
-            Direction::UP => draw_rectangle(self.get_center_x() - indicator_size/2.0 , self.get_center_y() - BOX_SIZE / 2.0, indicator_size, indicator_size, RED),
-            Direction::DOWN => draw_rectangle(self.get_center_x() - indicator_size/2.0, self.get_center_y() + BOX_SIZE / 4.0, indicator_size, indicator_size, RED),
-            Direction::LEFT => draw_rectangle(self.get_center_x() - BOX_SIZE / 2.0, self.get_center_y() - indicator_size/2.0, indicator_size, indicator_size, RED),
-            Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE / 4.0, self.get_center_y() - indicator_size/2.0, indicator_size, indicator_size, RED)
+            Direction::UP => draw_rectangle(self.get_center_x() - indicator_size / 2.0 , self.get_center_y() - BOX_SIZE / 2.0, indicator_size, indicator_size, RED),
+            Direction::DOWN => draw_rectangle(self.get_center_x() - indicator_size / 2.0, self.get_center_y() + BOX_SIZE / 4.0, indicator_size, indicator_size, RED),
+            Direction::LEFT => draw_rectangle(self.get_center_x() - BOX_SIZE / 2.0, self.get_center_y() - indicator_size / 2.0, indicator_size, indicator_size, RED),
+            Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE / 4.0, self.get_center_y() - indicator_size / 2.0, indicator_size, indicator_size, RED)
         }
     }
-
-    pub fn set_position(&mut self, point: Point){
-        self.location = point;
+    
+    pub fn step(&mut self, map: &Map, enemy_positions: &Vec<Point>) -> bool {
+        let difference = self.looking_difference();
+        let new_point = add_difference((self.location.x,self.location.y), difference);
+        
+        for point in enemy_positions {
+            if point.x == new_point.0 && point.y == new_point.1 {
+                return false;
+            }
+        }
+        
+        if can_step(new_point, map){
+            self.location = Point::new(new_point.0,new_point.1);
+        }
+        return true
     }
-    pub fn get_center_x(&self) -> f32 {
-        self.location.x + BOX_SIZE / 2.0
+    
+    fn looking_difference(&self)  -> (f32,f32){
+        match self.looking_at{
+            Direction::UP => {(0.0,-BOX_SIZE)},
+            Direction::DOWN => {(0.0,BOX_SIZE)},
+            Direction::LEFT => {(-BOX_SIZE,0.0)},
+            Direction::RIGHT => {(BOX_SIZE,0.0)},
+        }
     }
-    pub fn get_center_y(&self) -> f32 {
-        self.location.y + BOX_SIZE / 2.0
-    }
-
     pub fn turn_left(&mut self) {
         match self.looking_at {
             Direction::UP => self.looking_at = Direction::LEFT,
@@ -155,38 +180,9 @@ impl Player {
         }
     }
 
-    pub fn step(&mut self, step: f32, map: Vec<Vec<i32>>, enemy_positions: Vec<Point>) -> bool {
-        let mut new_point: Point = self.location.clone();
-        match self.looking_at {
-            Direction::LEFT => {
-                new_point.x -= step;
-            }
-            Direction::RIGHT => {
-                new_point.x += step;
-            }
-            Direction::UP => {
-                new_point.y -= step;
-            }
-            Direction::DOWN => {
-                new_point.y += step;
-            }
-        }
-        let mut empty = true;
-        for point in enemy_positions {
-            if point.x == new_point.x && point.y == new_point.y {
-                empty = false;
-            }
-        }
-
-        if can_step(new_point, map.clone()) && empty {
-            self.location = new_point;
-        }
-        return can_step(new_point, map.clone()) && empty;
-    }
-
     /* Get 60degree FOV (field of view) rays from player position */
     pub fn get_rays(&self, visual_window_start_x: f32, map: Map) -> Vec<Ray> {
-        let player_angle: f32 = get_angle(self.looking_at);
+        let player_angle: f32 = looking_direction_to_radians(self.looking_at);
         let initial_angle = player_angle - FOV / 2.0;
         let number_of_rays: f32 = screen_width() - visual_window_start_x;
         let angle_step: f32 = FOV / number_of_rays;
@@ -251,8 +247,7 @@ impl Player {
     }
 }
 
-/*get radians from direction*/
-pub fn get_angle(direction: Direction) -> f32 {
+pub fn looking_direction_to_radians(direction: Direction) -> f32 {
     match direction {
         Direction::LEFT => 3.14,
         Direction::RIGHT => 0.0,
@@ -267,8 +262,13 @@ pub fn fix_fish_eye(distance: f32, angle: f32, player_angle: f32) -> f32 {
 }
 
 /*Check collision with walls*/
-pub fn can_step(new_location: Point, map: Vec<Vec<i32>>) -> bool {
-    let x = new_location.x / BOX_SIZE;
-    let y = new_location.y / BOX_SIZE;
-    return map[y as usize][x as usize] == 0;
+pub fn can_step(new_location: (f32,f32), map: &Map) -> bool {
+    let x = new_location.0 / BOX_SIZE;
+    let y = new_location.1 / BOX_SIZE;
+    return map.0[y as usize][x as usize] == 0;
 }
+
+pub fn add_difference(x:(f32,f32), y:(f32,f32)) -> (f32,f32){
+    (x.0+y.0,x.1+y.1)
+}
+

@@ -10,6 +10,7 @@ use std::sync::mpsc::channel;
 use std::thread;
 use local_ip_address::local_ip;
 use macroquad::prelude::*;
+use map::Map;
 use serde_json::*;
 use regex::Regex;
 use std::collections::HashMap;
@@ -90,9 +91,9 @@ async fn main() -> std::io::Result<()> {
         // THEN DRAW ONLY THE ENEMIES
         for (src, player) in &data.players {
             if src.to_string() != sender_clone.get_address().to_string() {
-                let visible: bool = data.map.check_visibility(me.clone(), player.clone()); 
+                let visible: bool = data.map.check_visibility(&me, &player); 
                 me.draw_enemy(player.clone(), &game_window, visible);
-                enemy_positions.push(player.location.clone());
+                enemy_positions.push(player.location);
             }
         }
 
@@ -109,7 +110,7 @@ async fn main() -> std::io::Result<()> {
             shooting_timer = 20;
             sender_clone.send_message("shoot", json!(me));
         }
-        listen_move_events(&sender_clone, me, data.map.0.clone(), enemy_positions);
+        listen_move_events(&sender_clone, me, &data.map, &enemy_positions);
         if is_key_pressed(KeyCode::Escape) {
             sender_clone.send_message("I QUIT", json!(""));
             exit(1)
@@ -119,7 +120,7 @@ async fn main() -> std::io::Result<()> {
     }
 }
 
-pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>, enemy_positions: Vec<Point>) {
+pub fn listen_move_events(client: &Client, mut me: Player, map: &Map, enemy_positions: &Vec<Point>) {
     let mut action:bool = false;
     if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
         me.turn_left();
@@ -130,10 +131,10 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>, e
         action = true;
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
-        action = me.step(BOX_SIZE, map.clone(), enemy_positions.clone());
+        action = me.step(map, enemy_positions);
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
-        action = me.step(-BOX_SIZE, map.clone(), enemy_positions.clone());
+        action = me.step(map, enemy_positions);
     }
     if action {
         client.send_message("movement", json!(me))
