@@ -30,7 +30,9 @@ mod ray;
 fn window_conf() -> Conf {
     Conf {
         window_title: "MAZE".to_owned(),
-        fullscreen: false,
+        window_height: 850,
+        window_width: 1220,
+        window_resizable: false,
         ..Default::default()
     }
 }
@@ -69,7 +71,7 @@ async fn main() -> std::io::Result<()> {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
         }
-
+        
         let game_window: GameWindow = data.map.draw(&data.players);
         let mut me = Player::new(zero_point);
         let mut enemy_positions: Vec<Point> = vec![];
@@ -84,8 +86,8 @@ async fn main() -> std::io::Result<()> {
         // THEN DRAW ONLY THE ENEMIES
         for (src, player) in &data.players {
             if src.to_string() != sender_clone.get_address().to_string() {
-                let wall_in_between: bool = data.map.check_visibility(me.location.clone(), player.location.clone()); 
-                me.draw_enemy(player.clone(), &game_window, wall_in_between);
+                let visible: bool = data.map.check_visibility(me.clone(), player.clone()); 
+                me.draw_enemy(player.clone(), &game_window, visible);
                 enemy_positions.push(player.location.clone());
             }
         }
@@ -118,10 +120,10 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: Vec<Vec<i32>>, e
         action = true;
     }
     if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
-        action = me.step(20.0, map.clone(), enemy_positions.clone());
+        action = me.step(BOX_SIZE, map.clone(), enemy_positions.clone());
     }
     if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
-        action = me.step(-20.0, map.clone(), enemy_positions.clone());
+        action = me.step(-BOX_SIZE, map.clone(), enemy_positions.clone());
     }
     if action {
         client.send_message("movement", json!(me))

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 pub const WALL: i32 = 1;
 const FLOOR: i32 = 0;
+pub const BOX_SIZE: f32 = 15.0;
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Map(pub Vec<Vec<i32>>);
@@ -24,7 +25,7 @@ impl Map {
             let row = thread_rng().gen_range(1..self.height() - 1);
             let column = thread_rng().gen_range(1..self.width() - 1);
             if self.0[row][column] == FLOOR {
-                return Point::new(column as f32 * 20.0, row as f32 * 20.0);
+                return Point::new(column as f32 * BOX_SIZE, row as f32 * BOX_SIZE);
             }
         }
     }
