@@ -1,16 +1,13 @@
 use macroquad::prelude::*;
-use math::round;
 use serde::{Deserialize, Serialize};
 
 use crate::common::constants::BOX_SIZE;
 use crate::map::map::GameWindow;
 use crate::map::map::Map;
-use crate::map::map::WALL;
 use crate::utils::point::Point;
 use crate::utils::ray::Ray;
 
 const FOV: f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)-> to_radians(60.0)
-
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum Direction {
@@ -120,49 +117,6 @@ impl Player {
             Direction::RIGHT => draw_rectangle(self.get_center_x() + BOX_SIZE / 4.0, self.get_center_y() - indicator_size / 2.0, indicator_size, indicator_size, RED)
         }
     }
-    
-    pub fn make_move(&mut self, step: (f32, f32), map: &Map, enemy_positions: &Vec<Point>) -> bool {
-        let new_point = add_difference((self.location.x,self.location.y), step);
-        
-        for point in enemy_positions {
-            if point.x == new_point.0 && point.y == new_point.1 {
-                return false;
-            }
-        }
-        
-        if can_step(new_point, map){
-            self.location = Point::new(new_point.0,new_point.1);
-            return true
-        }
-        false
-    }
-    
-    pub fn step_difference(&self)  -> (f32,f32){
-        match self.looking_at{
-            Direction::UP => {(0.0,-BOX_SIZE)},
-            Direction::DOWN => {(0.0,BOX_SIZE)},
-            Direction::LEFT => {(-BOX_SIZE,0.0)},
-            Direction::RIGHT => {(BOX_SIZE,0.0)},
-        }
-    }
-
-    pub fn turn_left(&mut self) {
-        match self.looking_at {
-            Direction::UP => self.looking_at = Direction::LEFT,
-            Direction::DOWN => self.looking_at = Direction::RIGHT,
-            Direction::LEFT => self.looking_at = Direction::DOWN,
-            Direction::RIGHT => self.looking_at = Direction::UP,
-        }
-    }
-
-    pub fn turn_right(&mut self) {
-        match self.looking_at {
-            Direction::UP => self.looking_at = Direction::RIGHT,
-            Direction::DOWN => self.looking_at = Direction::LEFT,
-            Direction::LEFT => self.looking_at = Direction::UP,
-            Direction::RIGHT => self.looking_at = Direction::DOWN,
-        }
-    }
 
     /* Get 60degree FOV (field of view) rays from player position */
     pub fn get_rays(&self, visual_window_start_x: f32, map: Map) -> Vec<Ray> {
@@ -180,55 +134,6 @@ impl Player {
         }
         return result;
     }
-
-    //shooting
-    pub fn shoot(&self, map: Vec<Vec<i32>>) {
-        let (x, y) = self.get_tiles();
-        let mut final_point_x: f32 = self.get_center_x();
-        let mut final_point_y: f32 = self.get_center_y();
-        match self.looking_at {
-            Direction::UP => {
-                for i in 0..=y as usize {
-                    if map[i][x as usize] == WALL {
-                        final_point_y = i as f32 * BOX_SIZE + BOX_SIZE;
-                    }
-                }
-            }
-            Direction::DOWN => {
-                for i in y as usize..map.len() {
-                    if map[i][x as usize] == WALL {
-                        final_point_y = i as f32 * BOX_SIZE;
-                        break;
-                    }
-                }
-            }
-            Direction::LEFT => {
-                for i in 0..=x as usize {
-                    if map[y as usize][i] == WALL {
-                        final_point_x = i as f32 * BOX_SIZE + BOX_SIZE;
-                    }
-                }
-            }
-            Direction::RIGHT => {
-                for i in x as usize..map[0].len() {
-                    if map[y as usize][i] == WALL {
-                        final_point_x = i as f32 * BOX_SIZE;
-                        break;
-                    }
-                }
-            }
-        }
-        self.animate_shoot(final_point_x, final_point_y);
-    }
-
-    fn get_tiles(&self) -> (i32, i32) {
-        return (round::floor((self.location.x / BOX_SIZE) as f64, 0) as i32,
-                round::floor((self.location.y / BOX_SIZE) as f64, 0) as i32);
-    }
-
-    pub fn animate_shoot(&self, final_x: f32, final_y: f32) {
-        draw_line(self.get_center_x(), self.get_center_y(), final_x, final_y, 5.0, VIOLET);
-    }
 }
 
 pub fn looking_direction_to_radians(direction: Direction) -> f32 {
@@ -243,19 +148,4 @@ pub fn looking_direction_to_radians(direction: Direction) -> f32 {
 pub fn fix_fish_eye(distance: f32, angle: f32, player_angle: f32) -> f32 {
     let diff = angle - player_angle;
     return distance * diff.cos();
-}
-
-/*Check collision with walls*/
-pub fn can_step(new_location: (f32,f32), map: &Map) -> bool {
-    let x = new_location.0 / BOX_SIZE;
-    let y = new_location.1 / BOX_SIZE;
-    return map.0[y as usize][x as usize] == 0;
-}
-
-pub fn add_difference(x:(f32,f32), y:(f32,f32)) -> (f32,f32){
-    (x.0+y.0,x.1+y.1)
-}
-
-pub fn reverse_difference(x:(f32,f32)) -> (f32,f32){
-    (x.0 * -1.0, x.1 * -1.0)
 }

@@ -14,7 +14,7 @@ use local_ip_address::local_ip;
 
 use common::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use map::map::{GameWindow, Map};
-use player::player::{Player, reverse_difference};
+use player::{player::*, movement::reverse_difference};
 use utils::point::Point;
 use crate::client_server::*;
 
