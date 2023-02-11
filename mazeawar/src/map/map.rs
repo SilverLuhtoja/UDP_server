@@ -1,11 +1,12 @@
-use macroquad::color::{BLACK, WHITE};
-use macroquad::shapes::draw_rectangle;
+
 use serde::{Serialize, Deserialize};
 use macroquad::prelude::*;
+use std::net::SocketAddr;
+use std::collections::HashMap;
 
-
-use crate::player::*;
-use std::{net::{SocketAddr}, collections::HashMap};
+use crate::common::constants::BOX_SIZE;
+use crate::player;
+use crate::player::player::{Player, Direction};
 
 pub const FLOOR: i32 = 0;
 pub const WALL: i32 = 1;
@@ -57,7 +58,7 @@ impl Map {
         x < 0.0 || x >= self.width() as f32 || y < 0.0 || y >= self.height() as f32
     }
 
-    pub fn check_visibility(&self, player1: Player, player2: Player) -> bool {
+    pub fn check_visibility(&self, player1: &Player, player2: &Player) -> bool {
         let mut pl1_x = player1.location.x / BOX_SIZE;
         let mut pl1_y = player1.location.y / BOX_SIZE;
         let pl2_x = player2.location.x / BOX_SIZE;
