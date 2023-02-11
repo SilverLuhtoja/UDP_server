@@ -1,6 +1,7 @@
 use r::{Rng, thread_rng};
 use macroquad::prelude::*;
-use crate::map::{Map, WALL};
+
+use super::map::{WALL, Map};
 
 //each cell has 4 walls. The number is an index in the array of walls
 const TOP: usize = 0;
