@@ -5,7 +5,8 @@ use std::net::SocketAddr;
 use std::collections::HashMap;
 
 use crate::common::constants::BOX_SIZE;
-use crate::player::{Direction, Player};
+use crate::player;
+use crate::player::player::{Player, Direction};
 
 pub const FLOOR: i32 = 0;
 pub const WALL: i32 = 1;

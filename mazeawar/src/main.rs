@@ -3,33 +3,26 @@
 // #![allow(unused_variables)]
 
 use std::fs::read;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use macroquad::prelude::*;
+use serde_json::*;
+use std::net::SocketAddr;
 use std::process::exit;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::thread;
-use common::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use local_ip_address::local_ip;
-use macroquad::prelude::*;
-use map::Map;
-use serde_json::*;
-use regex::Regex;
-use std::collections::HashMap;
-use macroquad::time::get_fps;
 
+use common::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
+use map::map::{GameWindow, Map};
+use player::player::{Player, reverse_difference};
+use utils::point::Point;
 use crate::client_server::*;
-use crate::player::*;
-use crate::utils::*;
-use crate::map::GameWindow;
-use crate::ray::Ray;
 
 mod client_server;
 mod map;
-mod maze;
+mod common;
 mod player;
 mod utils;
-mod ray;
-mod common;
 
 fn window_conf() -> Conf {
     Conf {

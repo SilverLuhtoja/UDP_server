@@ -1,10 +1,13 @@
-use crate::common::constants::BOX_SIZE;
 use macroquad::prelude::*;
 use math::round;
 use serde::{Deserialize, Serialize};
 
-use crate::ray::*;
-use crate::map::*;
+use crate::common::constants::BOX_SIZE;
+use crate::map::map::GameWindow;
+use crate::map::map::Map;
+use crate::map::map::WALL;
+use crate::utils::point::Point;
+use crate::utils::ray::Ray;
 
 const FOV: f32 = 1.046; //angle of view of rays from player (60 degrees = 30 left + 30 right)-> to_radians(60.0)
 
@@ -17,32 +20,12 @@ pub enum Direction {
     RIGHT,
 }
 
-#[derive(Clone,Copy, Debug, PartialEq, Deserialize, Serialize)]
-pub struct Point{
-    pub x: f32,
-    pub y: f32,
-}
-
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Player {
     pub location: Point,
     pub looking_at: Direction,
     pub username: String,
     pub score: i32,
-}
-
-impl Point {
-    pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-
-    pub fn zero() -> Self {
-        Self { x: 0.0, y: 0.0 }
-    }
-
-    pub fn is_moved(&self) -> bool {
-        !(self.x == 0.0 && self.y == 0.0)
-    }
 }
 
 

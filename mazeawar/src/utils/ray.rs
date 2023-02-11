@@ -2,7 +2,7 @@ use math::round;
 use std::f64::consts::PI;
 
 use crate::common::constants::BOX_SIZE;
-use crate::map::*;
+use crate::map::map::Map;
 
 #[derive(Clone, Debug)]
 pub struct Ray {
