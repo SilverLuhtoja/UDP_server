@@ -2,9 +2,7 @@ use std::{net::{SocketAddr, UdpSocket, SocketAddrV4, Ipv4Addr}, collections::Has
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use serde_json::*;
-use crate::{map::map::Map, player::player::Player};
-
-const BUFFER: usize = 6000;
+use crate::{map::map::Map, player::player::Player, common::constants::BUFFER};
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Message {

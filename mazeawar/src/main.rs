@@ -1,28 +1,4 @@
-// #![allow(dead_code)]
-// #![allow(unused_imports)]
-// #![allow(unused_variables)]
-
-use std::fs::read;
-use macroquad::prelude::*;
-use serde_json::*;
-use std::net::SocketAddr;
-use std::process::exit;
-use std::sync::Arc;
-use std::sync::mpsc::channel;
-use std::thread;
-use local_ip_address::local_ip;
-
-use common::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
-use map::map::{GameWindow, Map};
-use player::{player::*, movement::reverse_difference};
-use utils::point::Point;
-use crate::client_server::*;
-
-mod client_server;
-mod map;
-mod common;
-mod player;
-mod utils;
+use mazewar::*;
 
 fn window_conf() -> Conf {
     Conf {
