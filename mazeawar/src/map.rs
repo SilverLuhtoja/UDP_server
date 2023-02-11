@@ -1,11 +1,11 @@
-use macroquad::color::{BLACK, WHITE};
-use macroquad::shapes::draw_rectangle;
+
 use serde::{Serialize, Deserialize};
 use macroquad::prelude::*;
+use std::net::SocketAddr;
+use std::collections::HashMap;
 
-
-use crate::player::*;
-use std::{net::{SocketAddr}, collections::HashMap};
+use crate::common::constants::BOX_SIZE;
+use crate::player::{Direction, Player};
 
 pub const FLOOR: i32 = 0;
 pub const WALL: i32 = 1;

@@ -8,6 +8,7 @@ use std::process::exit;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::thread;
+use common::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use local_ip_address::local_ip;
 use macroquad::prelude::*;
 use map::Map;
@@ -28,12 +29,13 @@ mod maze;
 mod player;
 mod utils;
 mod ray;
+mod common;
 
 fn window_conf() -> Conf {
     Conf {
         window_title: "MAZE".to_owned(),
-        window_height: 850,
-        window_width: 1220,
+        window_height: WINDOW_HEIGHT,
+        window_width: WINDOW_WIDTH,
         window_resizable: false,
         ..Default::default()
     }

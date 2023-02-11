@@ -1,3 +1,4 @@
+use crate::common::constants::BOX_SIZE;
 use macroquad::prelude::*;
 use math::round;
 use serde::{Deserialize, Serialize};
@@ -44,7 +45,6 @@ impl Point {
     }
 }
 
-pub const BOX_SIZE: f32 = 15.0;
 
 impl Player {
     pub fn new(location: Point) -> Self {
