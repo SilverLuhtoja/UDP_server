@@ -1,15 +1,9 @@
-# UDP_server
-
-
-
 # MAZEWARS
 
 * MazeGenerator (Valeria)
-
-TODO: 
-* Seperate maze,map.rs to seperate library and import in
-
+* Visual (Anna)
+* Connection (Silver & Emil)
 
 If you want to change size of the minimap box, then change both:
-front - > player.rs ´pub const BOX_SIZE: f32 = 15.0;´
+front - > common/constants
 back -> map.rs ´pub const BOX_SIZE: f32 = 15.0;´
