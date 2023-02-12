@@ -1,3 +1,6 @@
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+
 use math::round;
 use std::f64::consts::PI;
 
@@ -17,9 +20,9 @@ impl Ray {
     }
 
     /*Get the shortest ray from player position and ray angle*/
-    pub fn cast_ray(angle: f32, player_x:f32, player_y:f32, minimap: Map) -> Ray {
-        let vertical_collision_ray:Ray = Ray::get_vertical_collision(angle, minimap.clone(), player_x, player_y);
-        let horizontal_collision_ray = Ray::get_horizontal_collision(angle, minimap.clone(), player_x, player_y);
+    pub fn cast_ray(angle: f32, player_x:f32, player_y:f32, minimap: &Map) -> Ray {
+        let vertical_collision_ray:Ray = Ray::get_vertical_collision(angle, &minimap, player_x, player_y);
+        let horizontal_collision_ray = Ray::get_horizontal_collision(angle, &minimap, player_x, player_y);
         if horizontal_collision_ray.distance >= vertical_collision_ray.distance {
             return vertical_collision_ray;
         }
@@ -27,7 +30,7 @@ impl Ray {
     }
 
     /*get vertical collision ray from given position and angle*/
-    pub fn get_vertical_collision(angle:f32, minimap: Map, player_x:f32, player_y:f32) -> Ray{
+    pub fn get_vertical_collision(angle:f32, minimap: &Map, player_x:f32, player_y:f32) -> Ray{
         let left: bool = (PI * 3.0) / 2.0 > angle as f64 && angle as f64 > PI / 2.0;
         let right:bool = !left;
     
@@ -70,7 +73,7 @@ impl Ray {
     }
 
     /*get horizontal collision ray from given position and angle*/
-    pub fn get_horizontal_collision(angle:f32, minimap: Map, player_x:f32, player_y:f32) -> Ray{
+    pub fn get_horizontal_collision(angle:f32, minimap: &Map, player_x:f32, player_y:f32) -> Ray{
         let down:bool = angle > 0.0 &&  angle < PI as f32;
         let up: bool = !down;
     
@@ -92,7 +95,7 @@ impl Ray {
 
         while wall == 0{
             let mut cell_y:f32 = 0.0;
-            let mut cell_x:f32 = round::floor((next_x / BOX_SIZE) as f64, 0) as f32;
+            let cell_x:f32 = round::floor((next_x / BOX_SIZE) as f64, 0) as f32;
             if up {
                 cell_y = round::floor((next_y / BOX_SIZE) as f64, 0) as f32 - 1.0;
             } else{

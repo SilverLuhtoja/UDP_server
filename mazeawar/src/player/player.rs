@@ -128,7 +128,7 @@ impl Player {
         let mut i = 0;
         while i < number_of_rays as i32 {
             let angle: f32 = initial_angle + i as f32 * angle_step;
-            let one_ray: Ray = Ray::cast_ray(angle, self.location.x + BOX_SIZE / 2.0, self.location.y + BOX_SIZE / 2.0, map.clone());
+            let one_ray: Ray = Ray::cast_ray(angle, self.location.x + BOX_SIZE / 2.0, self.location.y + BOX_SIZE / 2.0, &map);
             result.push(one_ray);
             i += 1;
         }

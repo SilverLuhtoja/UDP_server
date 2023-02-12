@@ -1,11 +1,8 @@
 FRONT:
-- dead screen ? 
-- shooting on enemy only
+- dead screen -> NEED SOME DATA FROM BACK
 
 BACK: 
 - change maps when score 3
 - change score when kill
 - error handling
 
-
-code major clean up /commenting
