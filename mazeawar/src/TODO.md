@@ -1,6 +1,6 @@
 FRONT:
-- sort scoreboard players
 - dead screen ? 
+- shooting on enemy only
 
 BACK: 
 1. put name when connecting

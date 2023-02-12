@@ -31,8 +31,10 @@ async fn main() -> std::io::Result<()> {
         if data.message_type == "connect" {
             println!("CONNECTING WITH  --> {}", src);
             let spawn = map.get_spawn().await;
-            let player = Player::new(spawn);
+            let username = data.data.clone();
+            let player = Player::new(spawn, username.to_string());
             players.insert(src,player);
+            println!("LIST: {:?}", players);
         }
 
         if data.message_type == "movement" {
