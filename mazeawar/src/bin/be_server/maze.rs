@@ -1,7 +1,9 @@
+use mazewar::map::map::WALL;
 use r::{Rng, thread_rng};
 use macroquad::prelude::*;
 
-use super::map::{WALL, Map};
+use crate::map::Map;
+
 
 //each cell has 4 walls. The number is an index in the array of walls
 const TOP: usize = 0;

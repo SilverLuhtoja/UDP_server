@@ -1,2 +1,3 @@
 pub mod map;
-pub mod maze;
+pub mod game_window;
+pub mod score_board;

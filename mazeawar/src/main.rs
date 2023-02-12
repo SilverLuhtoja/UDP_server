@@ -1,28 +1,4 @@
-// #![allow(dead_code)]
-// #![allow(unused_imports)]
-// #![allow(unused_variables)]
-
-use std::fs::read;
-use macroquad::prelude::*;
-use serde_json::*;
-use std::net::SocketAddr;
-use std::process::exit;
-use std::sync::Arc;
-use std::sync::mpsc::channel;
-use std::thread;
-use local_ip_address::local_ip;
-
-use common::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
-use map::map::{GameWindow, Map};
-use player::{player::*, movement::reverse_difference};
-use utils::{point::Point, utils::convert::to_ip, utils::client_input::*};
-use client_server::*;
-
-mod client_server;
-mod map;
-mod common;
-mod player;
-mod utils;
+use mazewar::*;
 
 fn window_conf() -> Conf {
     Conf {
@@ -34,29 +10,29 @@ fn window_conf() -> Conf {
     }
 }
 
-
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
     //option for prod
     //add user input for server ip and user name
 
-    let input_ip = read_input("Enter IP address: ".to_string(), InputType::Ip);
-    println!("A {}", input_ip.to_string());
-    let server_addr = to_ip(input_ip);
-    let user_name = read_input("Enter Name:  ".to_string(), InputType::Name);
-
-
+    // let input_ip = read_input("Enter IP address: ".to_string(), InputType::Ip);
+    // println!("A {}", input_ip.to_string());
+    // let server_addr = to_ip(input_ip);
+    // let user_name = read_input("Enter Name:  ".to_string(), InputType::Name);
+    
+    
     //option for tests
     //to test this has to be changed to local ip address
     // let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
+
     let my_local_ip = local_ip().unwrap();
     let server_addr: SocketAddr = SocketAddr::new(my_local_ip, 4242);
+    let user_name = String::from("SILVER");
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
     let receiver_clone = sender_clone.clone();
     let (tx, rx) = channel::<Data>();
-
 
     thread::spawn(move || {
         receiver_clone.send_message("connect", json!(user_name));
@@ -94,7 +70,6 @@ async fn main() -> std::io::Result<()> {
                 enemy_positions.push(player.location);
             }
         }
-
 
         //  IT IS UGLY FIX :D 
         if shooting_timer <= 0 {
