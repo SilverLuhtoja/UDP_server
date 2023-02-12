@@ -37,11 +37,13 @@ fn window_conf() -> Conf {
     }
 }
 
+
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
     //option for prod
     //add user input for server ip and user name
     let input_ip = input::read("Enter IP address: ".to_string(), input::InputType::Ip);
+    println!("A {}", input_ip.to_string());
     let server_addr = convert::to_ip(input_ip);
     let user_name = input::read("Enter Name:  ".to_string(), input::InputType::Name);
 
@@ -56,7 +58,7 @@ async fn main() -> std::io::Result<()> {
 
 
     thread::spawn(move || {
-        receiver_clone.send_message("connect", json!(""));
+        receiver_clone.send_message("connect", json!(user_name));
         loop {
             let received_data = receiver_clone.read_message();
             tx.send(received_data).unwrap()
@@ -71,8 +73,7 @@ async fn main() -> std::io::Result<()> {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
         }
-        
-        let game_window: GameWindow = data.map.draw(&data.players);
+        let game_window: GameWindow = data.map.draw(&data.players.clone());
         let mut me = Player::new(zero_point);
         let mut enemy_positions: Vec<Point> = vec![];
         //FIRST FOUND ME IN THE LIST to settle the position

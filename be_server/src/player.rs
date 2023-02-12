@@ -38,12 +38,12 @@ pub struct Player{
 }
 
 impl Player {
-    pub fn new(location: Point) -> Self {
+    pub fn new(location: Point, username: String) -> Self {
         Self{
             location,
             looking_at: Direction::UP,
-            username: "default name".to_string(),
-            score: 15,
+            username: username,
+            score: 0,
         }        
     }
 }

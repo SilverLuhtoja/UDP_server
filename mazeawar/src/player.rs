@@ -189,8 +189,9 @@ impl Player {
 
         if can_step(new_point, map.clone()) && empty {
             self.location = new_point;
+            return true;
         }
-        return can_step(new_point, map.clone()) && empty;
+        return false;
     }
 
     /* Get 60degree FOV (field of view) rays from player position */
