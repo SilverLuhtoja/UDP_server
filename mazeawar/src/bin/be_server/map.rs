@@ -1,4 +1,4 @@
-use mazewar::{map::map::FLOOR, Point, common::constants::BOX_SIZE};
+use mazewar::{map::map::{FLOOR, WALL}, Point, common::constants::BOX_SIZE};
 use r::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
@@ -24,6 +24,10 @@ impl Map {
         self.0.len()
     }
 
+    pub fn is_wall(&self, row: f32, column: f32) -> bool{
+        self.0[row as usize][column as usize] == 1
+    }
+
     pub async fn get_spawn(&self) -> Point {
         loop {
             let row = thread_rng().gen_range(1..self.height() - 1);
@@ -34,7 +38,18 @@ impl Map {
         }
     }
 
-    pub fn is_wall(&self, row: f32, column: f32) -> bool{
-        self.0[row as usize][column as usize] == 1
+    pub fn remove_walls(&mut self, mut nb: i32) {
+        while nb != 0 {
+            let x = thread_rng().gen_range(1..(self.width() - 1));
+            let y = thread_rng().gen_range(1..(self.height() - 1));
+            if self.0[y][x] == WALL && (
+                self.0[y - 1][x] == WALL && self.0[y + 1][x] == WALL && self.0[y][x - 1] == FLOOR && self.0[y][x + 1] == FLOOR ||
+                    self.0[y][x - 1] == WALL && self.0[y][x + 1] == WALL && self.0[y - 1][x] == FLOOR && self.0[y + 1][x] == FLOOR
+            ) {
+                self.0[y][x] = FLOOR;
+                nb -= 1;
+        }
     }
+}
+
 }

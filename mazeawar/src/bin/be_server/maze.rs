@@ -4,7 +4,6 @@ use macroquad::prelude::*;
 
 use crate::map::Map;
 
-
 //each cell has 4 walls. The number is an index in the array of walls
 const TOP: usize = 0;
 const RIGHT: usize = 1;
@@ -14,10 +13,9 @@ const LEFT: usize = 3;
 //constants to define difficulty level by percentage of the walls that has to be removed
 pub const LOW: i32 = 50;
 pub const MEDIUM: i32 = 30;
-pub const HIGH: i32 = 10;
+pub const HIGH: i32 = 0;
 
-
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(Clone,Copy, Debug, PartialEq)]
 pub struct Cell {
     pub row: i32,
     pub col: i32,
@@ -62,7 +60,7 @@ impl Cell {
     }
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(Clone,Debug, PartialEq)]
 pub struct Grid {
     width: i32,
     height: i32,
@@ -152,14 +150,15 @@ impl Grid {
                     if !self.backtrace.is_empty() {
                         self.current = self.backtrace[0];
                         self.backtrace.remove(0);
-                    } else {
-                        self.adjust_difficulty_level();
+                    }
+                    else {
                         break;
                     }
                 }
             }
         }
     }
+
     fn adjust_difficulty_level(&mut self) {
         //count number of walls that has to be deleted
         let mut has_to_remove = self.walls * self.difficulty / 100;
@@ -181,6 +180,7 @@ impl Grid {
             }
         }
     }
+
     //converts array of cells to matrix
     pub fn convert_to_map(&self) -> Map {
         let mut map = Map::new((self.width * 2 + 1) as usize, (self.height * 2 + 1) as usize);
@@ -209,6 +209,8 @@ impl Grid {
                 map.0[row * 2 + 2][col * 2] = WALL;
             }
         };
+        let walls_to_remove = self.walls * self.difficulty / 100;
+        map.remove_walls(walls_to_remove);
         return map;
     }
 
