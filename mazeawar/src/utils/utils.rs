@@ -6,7 +6,7 @@ pub mod convert {
     }
 }
 
-pub mod input {
+pub mod client_input {
     use regex::Regex;
     use crate::miniquad::log;
 
@@ -15,7 +15,7 @@ pub mod input {
         Name,
     }
 
-    pub fn read(mut message: String, input_type: InputType) -> String {
+    pub fn read_input(mut message: String, input_type: InputType) -> String {
         use std::io::{stdin, stdout, Write};
         let mut input = String::new();
         let mut res = String::new();
