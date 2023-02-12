@@ -5,8 +5,9 @@ use local_ip_address::local_ip;
 use tokio::net::UdpSocket;
 use std::{net::SocketAddr, collections::HashMap};
 
-use mazewar::Player;
 use mazewar::common::constants::BUFFER;
+
+use crate::player::Player;
 
 const PORT: u16 = 4242;
 

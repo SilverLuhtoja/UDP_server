@@ -21,10 +21,6 @@ impl Map {
         Self(vec![vec![FLOOR; width]; height])
     }
 
-    pub fn new_from_arr(map: Vec<Vec<i32>>) -> Self{
-        Self(map)
-    }
-
     pub fn width(&self) -> usize {
         self.0[0].len()
     }
@@ -35,20 +31,6 @@ impl Map {
     
     pub fn out_of_map_bounce(&self, x: f32, y: f32) ->bool {
         x < 0.0 || x >= self.width() as f32 || y < 0.0 || y >= self.height() as f32
-    }
-
-    pub fn is_wall(&self, row: f32, column: f32) -> bool{
-        self.0[row as usize][column as usize] == 1
-    }
-
-    pub async fn get_spawn(&self) -> Point {
-        loop {
-            let row = thread_rng().gen_range(1..self.height() - 1);
-            let column = thread_rng().gen_range(1..self.width() - 1);
-            if self.0[row][column] == FLOOR {
-                return Point::new(column as f32 * BOX_SIZE, row as f32 * BOX_SIZE);
-            }
-        }
     }
 
     pub fn draw(&self, players: &HashMap<SocketAddr, Player>) -> GameWindow {

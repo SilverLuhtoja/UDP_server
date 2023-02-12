@@ -1,10 +1,13 @@
 use serde_json::json;
 use std::collections::HashMap;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, IpAddr, Ipv4Addr};
+use map::Map;
+use player::Player;
 
 mod server;
+mod map;
+mod player;
 use crate::server::*;
-pub use mazewar::*;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -13,6 +16,22 @@ async fn main() -> std::io::Result<()> {
     grid.generate_maze();
     let map = grid.convert_to_map();
     let mut players:HashMap<SocketAddr, Player> = HashMap::new();
+    
+
+    // let map_layout:Vec<Vec<i32>> = vec![
+    // vec![1, 1, 1, 1, 1, 1],
+    // vec![1, 0, 0, 0, 0, 1],
+    // vec![1, 0, 0, 0, 0, 1],
+    // vec![1, 0, 1, 1, 0, 1],
+    // vec![1, 0, 0, 0, 0, 1],
+    // vec![1, 0, 0, 0, 0, 1],
+    // vec![1, 1, 1, 1, 1, 1]
+    // ];
+    // let mut map = Map::new_from_arr(map_layout);
+    // let decoy:Player = Player::new(map.get_spawn().await, String::from("Miki")) ;
+    // let decoy_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192, 168, 8, 102)), 0);
+    // players.insert(decoy_addr,decoy);
+
 
     let mut message = BroadcastMessage{
                 map: json!(map),
@@ -25,8 +44,10 @@ async fn main() -> std::io::Result<()> {
         if data.message_type == "connect" {
             println!("CONNECTING WITH  --> {}", src);
             let spawn = map.get_spawn().await;
-            let player = Player::new(spawn);
+            let username = &data.data;
+            let player = Player::new(spawn, username.to_string());
             players.insert(src,player);
+            println!("LIST: {:?}", players);
         }
 
         if data.message_type == "movement" {
@@ -51,6 +72,9 @@ async fn main() -> std::io::Result<()> {
         
         message.players = players.clone();
         for (addr,_) in &players{
+            // if addr != &decoy_addr{
+            //     server.send_message(&message, addr).await
+            // }
             server.send_message(&message, addr).await
         }
     }
