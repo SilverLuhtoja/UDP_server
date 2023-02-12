@@ -4,7 +4,7 @@ use macroquad::{prelude::VIOLET, shapes::draw_line};
 use math::round;
 
 impl Player {
-    pub fn shoot(&self, map: Vec<Vec<i32>>) {
+    pub fn shoot(&self, map: &Vec<Vec<i32>>) {
         let (x, y) = self.get_tiles();
         let mut final_point_x: f32 = self.get_center_x();
         let mut final_point_y: f32 = self.get_center_y();

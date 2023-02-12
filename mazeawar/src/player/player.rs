@@ -48,7 +48,7 @@ impl Player {
         self.location.y + BOX_SIZE / 2.0
     }
 
-    pub fn draw(&self, game_window: GameWindow, map: Map, is_shot: bool){
+    pub fn draw(&self, game_window: &GameWindow, map: &Map, is_shot: bool){
         // Draw rays from player on minimap and visual part
         for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
             //on minimap
@@ -119,7 +119,7 @@ impl Player {
     }
 
     /* Get 60degree FOV (field of view) rays from player position */
-    pub fn get_rays(&self, visual_window_start_x: f32, map: Map) -> Vec<Ray> {
+    pub fn get_rays(&self, visual_window_start_x: f32, map: &Map) -> Vec<Ray> {
         let player_angle: f32 = looking_direction_to_radians(self.looking_at);
         let initial_angle = player_angle - FOV / 2.0;
         let number_of_rays: f32 = screen_width() - visual_window_start_x;

@@ -79,33 +79,33 @@ async fn main() -> std::io::Result<()> {
     let mut shooting_timer = 0;
     // Current display updates based on events, should be from back
     loop {
+        if let Ok(received_data) = rx.try_recv() {
+            data = received_data;
+        }
+        clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
         match game_state {
             GameState::Killed =>  {
-                clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
                 draw_text("YOU ARE KILLED AND STARTING OVER IN NEW POSITION:", 100.0, 200.0, 50.0, WHITE);
                 if is_key_pressed(KeyCode::Escape){
                     game_state = GameState::Game
                 }
             },
             GameState::NewLevel => {
-                clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
                 draw_text("NEW LEVEL IS READY", 100.0, 200.0, 50.0, WHITE);
                 if is_key_pressed(KeyCode::Escape){
                     game_state = GameState::Game
                 }
             },
             GameState::Game => {
-                if let Ok(received_data) = rx.try_recv() {
-                    data = received_data;
-                }
-                let game_window: GameWindow = data.map.draw(&data.players.clone());
+                let game_window: GameWindow = data.map.draw(&data.players);
                 let mut me = Player::new(zero_point);
                 let mut enemy_positions: Vec<Point> = vec![];
+
                 //FIRST FOUND ME IN THE LIST to settle the position
                 for (src, player) in &data.players {
                     if src.to_string() == sender_clone.get_address().to_string() {
                         me = player.clone();
-                        me.draw(game_window.clone(), data.map.clone(), is_shot);
+                        me.draw(&game_window, &data.map, is_shot);
                     }
                 }
 
@@ -121,21 +121,17 @@ async fn main() -> std::io::Result<()> {
                 //  IT IS UGLY FIX :D 
                 if shooting_timer <= 0 {
                     is_shot = false;
-                }else{
-                    me.shoot(data.map.0.clone());
+                } else{
+                    me.shoot(&data.map.0);
                     shooting_timer -= 1;
                 }
                 if is_key_pressed(KeyCode::Space) {
                     is_shot = true;
                     shooting_timer = 20;
-                    let mut enemy_visible = false;
                     for (src, player) in &data.players {
                         if data.map.check_visibility(&me, player) {
-                            enemy_visible = true;
+                            sender_clone.send_message("shoot", json!(me));
                         }
-                    }
-                    if enemy_visible {
-                        sender_clone.send_message("shoot", json!(me));
                     }
                 }
                 listen_move_events(&sender_clone, me, &data.map, &enemy_positions);
