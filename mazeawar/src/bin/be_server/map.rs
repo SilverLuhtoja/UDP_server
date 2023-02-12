@@ -8,6 +8,10 @@ pub struct Map(
 );
 
 impl Map {
+    pub fn new(width: usize, height: usize) -> Self {
+        Self(vec![vec![FLOOR; width]; height])
+    }
+
     pub fn new_from_arr(map: Vec<Vec<i32>>) -> Self{
         Self(map)
     }

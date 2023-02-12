@@ -1,5 +1,5 @@
 use super::player::{Direction, Player};
-use crate::{common::constants::BOX_SIZE, map::map::WALL, Map};
+use crate::{common::constants::BOX_SIZE, map::map::WALL};
 use macroquad::{prelude::VIOLET, shapes::draw_line};
 use math::round;
 

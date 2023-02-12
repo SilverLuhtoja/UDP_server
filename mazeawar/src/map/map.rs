@@ -1,10 +1,8 @@
-use r::{thread_rng, Rng};
 use serde::{Serialize, Deserialize};
 use macroquad::prelude::*;
 use std::net::SocketAddr;
 use std::collections::HashMap;
 
-use crate::Point;
 use crate::common::constants::BOX_SIZE;
 use crate::player::player::{Player, Direction};
 

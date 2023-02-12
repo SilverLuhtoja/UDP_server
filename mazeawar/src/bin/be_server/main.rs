@@ -1,3 +1,4 @@
+use maze::{Grid, LOW};
 use serde_json::json;
 use std::collections::HashMap;
 use std::net::{SocketAddr, IpAddr, Ipv4Addr};
@@ -7,6 +8,7 @@ use player::Player;
 mod server;
 mod map;
 mod player;
+mod maze;
 use crate::server::*;
 
 #[tokio::main]
