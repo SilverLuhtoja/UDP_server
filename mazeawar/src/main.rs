@@ -15,8 +15,8 @@ use local_ip_address::local_ip;
 use common::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use map::map::{GameWindow, Map};
 use player::{player::*, movement::reverse_difference};
-use utils::point::Point;
-use crate::client_server::*;
+use utils::{point::Point, utils::convert::to_ip, utils::client_input::*};
+use client_server::*;
 
 mod client_server;
 mod map;
@@ -40,10 +40,10 @@ async fn main() -> std::io::Result<()> {
     //option for prod
     //add user input for server ip and user name
 
-    let input_ip = input::read("Enter IP address: ".to_string(), input::InputType::Ip);
+    let input_ip = read_input("Enter IP address: ".to_string(), InputType::Ip);
     println!("A {}", input_ip.to_string());
-    let server_addr = convert::to_ip(input_ip);
-    let user_name = input::read("Enter Name:  ".to_string(), input::InputType::Name);
+    let server_addr = to_ip(input_ip);
+    let user_name = read_input("Enter Name:  ".to_string(), InputType::Name);
 
 
     //option for tests
