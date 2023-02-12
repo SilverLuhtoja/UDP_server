@@ -3,6 +3,9 @@ use macroquad::prelude::*;
 use std::net::SocketAddr;
 use std::collections::HashMap;
 
+use super::game_window::GameWindow;
+use super::score_board::ScoreBoard;
+
 use crate::common::constants::BOX_SIZE;
 use crate::player::player::{Player, Direction};
 
@@ -112,113 +115,5 @@ impl Map {
             },
         }
         return visible;
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize,Default)]
-/*Used to set-up visual part*/
-pub struct GameWindow{
-    pub minimap_start_x: f32,
-    pub minimap_start_y:f32,
-    pub minimap_finish_x: f32,
-    pub minimap_finish_y:f32,
-
-    pub visual_window_start_x: f32,
-    pub visual_window_start_y:f32,
-    pub visual_window_finish_x: f32,
-    pub visual_window_finish_y:f32,
-
-    pub score_board_start_x: f32,
-    pub score_board_start_y:f32,
-    pub score_board_finish_x: f32,
-    pub score_board_finish_y:f32,
-}
-
-
-impl GameWindow {
-    pub fn new() -> Self {
-        Self { 
-            minimap_start_x: 0.0,
-            minimap_start_y: 0.0,
-            minimap_finish_x: 0.0,
-            minimap_finish_y: 0.0,
-    
-            score_board_start_x: 0.0,
-            score_board_start_y: 0.0,
-            score_board_finish_x: 0.0,
-            score_board_finish_y: screen_height(),
-
-            visual_window_start_x: 0.0,
-            visual_window_start_y: 0.0,
-            visual_window_finish_x: screen_width(),
-            visual_window_finish_y: screen_height(),
-        }
-    }
-
-    
-    pub fn get_visual_screen_center_point(&self) -> (f32,f32){
-        let visual_screen_dimensions = self.get_visual_screen_width_height();
-        let visual_screen_starting_points = self.get_visual_screen_starting_point();
-        let visual_screen_center_points = (visual_screen_dimensions.0 / 2.0, visual_screen_dimensions.1 / 2.0);
-        (visual_screen_starting_points.0 + visual_screen_center_points.0, visual_screen_starting_points.1 + visual_screen_center_points.1)
-    }
-
-    pub fn get_visual_screen_width_height(&self)-> (f32,f32) {
-        let width = self.visual_window_finish_x - self.visual_window_start_x;
-        let height= self.visual_window_finish_y - self.visual_window_start_y;
-        (width,height)
-    }
-
-    pub fn get_visual_screen_starting_point(&self)-> (f32,f32) {
-        (self.visual_window_start_x,self.visual_window_start_y)
-    }
-}
-
-
-
-
-#[derive(Debug, Clone)]
-pub struct ScoreBoard{
-    pub start_x: f32,
-    pub start_y: f32,
-    pub width: f32,
-    pub height: f32,
-    pub players: Vec<Player>,
-}
-
-impl ScoreBoard{
-    pub fn new(game_window: GameWindow, players: HashMap<SocketAddr, Player>) -> Self {
-        
-        //sort players by highest score
-        let mut sorted: Vec<Player> = vec![];
-        for (_, player) in players.clone() {
-            sorted.push(player);
-        }
-
-        sorted.sort_by(|a, b| b.score.cmp(&a.score));
-
-        Self{
-            start_x: 0.0,
-            start_y: game_window.score_board_start_y,
-            width: game_window.score_board_finish_x - 0.0,
-            height: game_window.score_board_finish_y - game_window.score_board_start_y,
-            players: sorted,
-        }
-    }
-    pub fn draw(&self) {
-        draw_rectangle(
-            self.start_x,
-            self.start_y,
-            self.width,
-            self.height,
-            GRAY,
-        );
-        let mut y_addition = BOX_SIZE;
-        for player in &self.players {
-            draw_text(&player.username.clone(), self.start_x + BOX_SIZE, self.start_y + y_addition, BOX_SIZE, BLACK); //name
-            draw_text(&player.score.to_string(), self.start_x + BOX_SIZE * 10.0, self.start_y + y_addition, BOX_SIZE, BLACK); //score
-            y_addition += BOX_SIZE;
-        }
-    
     }
 }

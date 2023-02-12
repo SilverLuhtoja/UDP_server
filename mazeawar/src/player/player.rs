@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::common::constants::BOX_SIZE;
-use crate::map::map::GameWindow;
+use crate::map::game_window::GameWindow;
 use crate::map::map::Map;
 use crate::utils::point::Point;
 use crate::utils::ray::Ray;

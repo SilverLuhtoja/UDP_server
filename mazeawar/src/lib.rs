@@ -9,7 +9,8 @@ pub use std::thread;
 pub use local_ip_address::local_ip;
 
 pub use common::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
-pub use map::map::{GameWindow, Map};
+pub use map::map::Map;
+pub use map::game_window::GameWindow;
 pub use player::{player::*, movement::reverse_difference};
 pub use utils::utils::{client_input::read_input, convert::to_ip, client_input::InputType};
 pub use utils::point::Point;
