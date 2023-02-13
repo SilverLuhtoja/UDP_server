@@ -1,6 +1,5 @@
 FRONT:
-- dead screen ? 
-- shooting on enemy only
+- dead screen -> NEED SOME DATA FROM BACK
 
 BACK: 
 1. ~~put name when connecting~~ 

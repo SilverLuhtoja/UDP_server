@@ -1,3 +1,6 @@
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+
 pub mod convert {
     use std::net::{SocketAddr, ToSocketAddrs};
 

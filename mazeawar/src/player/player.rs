@@ -48,7 +48,7 @@ impl Player {
         self.location.y + BOX_SIZE / 2.0
     }
 
-    pub fn draw(&self, game_window: GameWindow, map: Map, is_shot: bool){
+    pub fn draw(&self, game_window: &GameWindow, map: &Map, is_shot: bool){
         // Draw rays from player on minimap and visual part
         for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
             //on minimap
@@ -72,11 +72,10 @@ impl Player {
             //ceiling
             draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, WHITE);
 
-
-            if is_shot {
-                let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
-                draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0 + wall_height / 2.0, 5.0, GREEN);
-            }
+        }
+        if is_shot {
+            let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
+            draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0, 5.0, GREEN);
         }
         //line to separate map and visual
         draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
@@ -119,7 +118,7 @@ impl Player {
     }
 
     /* Get 60degree FOV (field of view) rays from player position */
-    pub fn get_rays(&self, visual_window_start_x: f32, map: Map) -> Vec<Ray> {
+    pub fn get_rays(&self, visual_window_start_x: f32, map: &Map) -> Vec<Ray> {
         let player_angle: f32 = looking_direction_to_radians(self.looking_at);
         let initial_angle = player_angle - FOV / 2.0;
         let number_of_rays: f32 = screen_width() - visual_window_start_x;
@@ -128,7 +127,7 @@ impl Player {
         let mut i = 0;
         while i < number_of_rays as i32 {
             let angle: f32 = initial_angle + i as f32 * angle_step;
-            let one_ray: Ray = Ray::cast_ray(angle, self.location.x + BOX_SIZE / 2.0, self.location.y + BOX_SIZE / 2.0, map.clone());
+            let one_ray: Ray = Ray::cast_ray(angle, self.location.x + BOX_SIZE / 2.0, self.location.y + BOX_SIZE / 2.0, &map);
             result.push(one_ray);
             i += 1;
         }

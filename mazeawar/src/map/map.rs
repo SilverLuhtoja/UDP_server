@@ -62,58 +62,34 @@ impl Map {
         return game_window;
     }
 
-    pub fn check_visibility(&self, player1: &Player, player2: &Player) -> bool {
-        let mut pl1_x = player1.location.x / BOX_SIZE;
-        let mut pl1_y = player1.location.y / BOX_SIZE;
-        let pl2_x = player2.location.x / BOX_SIZE;
-        let pl2_y = player2.location.y / BOX_SIZE;
-        let mut visible = false;
-        match player1.looking_at{
-            Direction::UP => {
-                if player1.location.y > player2.location.y && player1.location.x == player2.location.x {
-                    visible = true;
-                    while pl1_y >= pl2_y {
-                        if self.0[pl1_y as usize][pl1_x as usize] == 1 {
-                            visible = false;
-                        }
-                        pl1_y -= 1.0;
-                    }
-                }
-            },
-            Direction::DOWN => {
-                if player1.location.y < player2.location.y && player1.location.x == player2.location.x {
-                    visible = true;
-                    while pl1_y <= pl2_y {
-                        if self.0[pl1_y as usize][pl1_x as usize] == 1 {
-                            visible = false;
-                        }
-                        pl1_y += 1.0;
-                    }
-                }
-            },
-            Direction::LEFT => {
-                if player1.location.x > player2.location.x && player1.location.y == player2.location.y {
-                    visible = true;
-                    while pl1_x >= pl2_x {
-                        if self.0[pl1_y as usize][pl1_x as usize] == 1 {
-                            visible = false;
-                        }
-                        pl1_x -= 1.0;
-                    }
-                }
-            },
-            Direction::RIGHT => {
-                if player1.location.x < player2.location.x && player1.location.y == player2.location.y {
-                    visible = true;
-                    while pl1_x <= pl2_x {
-                        if self.0[pl1_y as usize][pl1_x as usize] == 1 {
-                            visible = false;
-                        }
-                        pl1_x += 1.0;
-                    }
-                }
-            },
-        }
-        return visible;
+    pub fn is_wall(&self, row: f32, column: f32) -> bool{
+        self.0[row as usize][column as usize] == 1
     }
+
+
+    pub fn check_visibility(&self, player1: &Player, player2: &Player) -> bool {
+        let mut pl1 = (player1.location.x / BOX_SIZE, player1.location.y / BOX_SIZE);
+        let pl2 = (player2.location.x / BOX_SIZE, player2.location.y / BOX_SIZE);
+        let difference = looking_direction_calculation_difference(player1.looking_at);
+        while pl1 != pl2{
+            if self.is_wall(pl1.1, pl1.0){
+                return false
+            }
+            pl1 = add_difference(pl1, difference)
+        }
+        true
+    }
+}
+
+pub fn looking_direction_calculation_difference(face_dir: Direction) -> (f32,f32){
+    match face_dir{
+        Direction::UP => {(0.0,-1.0)},
+        Direction::DOWN => {(0.0,1.0)},
+        Direction::LEFT => {(-1.0,0.0)},
+        Direction::RIGHT => {(1.0,0.0)},
+    }
+}
+
+pub fn add_difference(x:(f32,f32), y:(f32,f32)) -> (f32,f32){
+    (x.0+y.0,x.1+y.1)
 }
