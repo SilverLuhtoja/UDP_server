@@ -6,14 +6,15 @@ use crate::{map::map::Map, player::player::Player, common::constants::BUFFER};
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Message {
-     message_type: String,
-     data: JsonValue,
+    message_type: String,
+    data: JsonValue,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, Default)]
 pub struct Data{
     pub map: Map,
     pub players: HashMap<SocketAddr, Player>,
+    pub game_state: String
 }
 
 #[derive(Debug)]

@@ -23,10 +23,10 @@ async fn main() -> std::io::Result<()> {
     //option for prod
     //add user input for server ip and user name
 
-    let input_ip = read_input("Enter IP address: ".to_string(), InputType::Ip);
-    println!("A {}", input_ip.to_string());
-    let server_addr = to_ip(input_ip);
-    let user_name = read_input("Enter Name:  ".to_string(), InputType::Name);
+    // let input_ip = read_input("Enter IP address: ".to_string(), InputType::Ip);
+    // println!("A {}", input_ip.to_string());
+    // let server_addr = to_ip(input_ip);
+    // let user_name = read_input("Enter Name:  ".to_string(), InputType::Name);
     
     
     //option for tests
@@ -34,8 +34,8 @@ async fn main() -> std::io::Result<()> {
     // let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
 
     let my_local_ip = local_ip().unwrap();
-    // let server_addr: SocketAddr = SocketAddr::new(my_local_ip, 4242);
-    // let user_name = String::from("SILVER");
+    let server_addr: SocketAddr = SocketAddr::new(my_local_ip, 4242);
+    let user_name = String::from("SILVER");
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
@@ -58,6 +58,9 @@ async fn main() -> std::io::Result<()> {
     loop {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
+            if data.game_state == "NEW LEVEL"{
+                game_state = GameState::NewLevel
+            }
         }
         clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
         match game_state {
@@ -70,6 +73,7 @@ async fn main() -> std::io::Result<()> {
             GameState::NewLevel => {
                 draw_text("NEW LEVEL IS READY", 100.0, 200.0, 50.0, WHITE);
                 if is_key_pressed(KeyCode::Escape){
+                    sender_clone.send_message("game on", json!(""));
                     game_state = GameState::Game
                 }
             },

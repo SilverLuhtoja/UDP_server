@@ -20,7 +20,8 @@ pub struct Data{
 #[derive(Clone, Debug, PartialEq,Deserialize, Serialize)]
 pub struct BroadcastMessage{
    pub map: JsonValue,
-   pub players : HashMap<SocketAddr, Player>
+   pub players : HashMap<SocketAddr, Player>,
+   pub game_state: String
 }
 
 #[derive(Debug)]
