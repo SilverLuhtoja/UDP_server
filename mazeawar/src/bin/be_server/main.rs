@@ -78,22 +78,24 @@ async fn main() -> std::io::Result<()> {
         if data.message_type == "shoot" {
             let shooter = players.get(&src).expect("ADD PLAYER < NOT IN HASH >");
             let mut cloned = players.clone();
-            let mut is_kill = false;
             for (addr,player) in &players{
                 if &src != addr && shooter.is_target_aligned(&player) {
-                        if shooter.is_hit(&player, &map) {
+                        if shooter.is_hit(&player, &map) && player.alive{
                             let target =  cloned.get_mut(&addr).expect("ADD PLAYER < NOT IN HASH >");
-                            target.location = map.get_spawn().await;
-                            is_kill = true;
+                            target.alive = false;
+                            let shooter = cloned.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
+                            shooter.score += 1;
                     }
                 }
             }
-            if is_kill{
-                let shooter = cloned.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
-                shooter.score += 1;
-            }
-
+         
             players = cloned;
+        }
+
+        if data.message_type == "revive" {
+            let mut current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
+            current_player.alive = true;
+            current_player.location = map.get_spawn().await;
         }
         
         if is_map_change(&players){

@@ -23,6 +23,7 @@ pub struct Player {
     pub looking_at: Direction,
     pub username: String,
     pub score: i32,
+    pub alive: bool
 }
 
 
@@ -33,6 +34,7 @@ impl Player {
             looking_at: Direction::UP,
             username: "".to_string(),
             score: 0,
+            alive: true
         }        
     }
 

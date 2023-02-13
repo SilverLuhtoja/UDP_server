@@ -67,7 +67,8 @@ async fn main() -> std::io::Result<()> {
             GameState::Killed =>  {
                 draw_text("YOU ARE KILLED AND STARTING OVER IN NEW POSITION:", 100.0, 200.0, 50.0, WHITE);
                 if is_key_pressed(KeyCode::Escape){
-                    game_state = GameState::Game
+                    sender_clone.send_message("revive", json!(""));
+                    game_state = GameState::Game;
                 }
             },
             GameState::NewLevel => {
@@ -90,10 +91,13 @@ async fn main() -> std::io::Result<()> {
                     }
                 }
 
+                if !me.alive{
+                    game_state = GameState::Killed;
+                }
                 // THEN DRAW ONLY THE ENEMIES
                 for (src, player) in &data.players {
                     if src.to_string() != sender_clone.get_address().to_string() {
-                        let visible: bool = data.map.check_visibility(&me, &player); 
+                        let visible: bool = player.alive && data.map.check_visibility(&me, &player); 
                         me.draw_enemy(player.clone(), &game_window, visible);
                         enemy_positions.push(player.location);
                     }
@@ -109,7 +113,7 @@ async fn main() -> std::io::Result<()> {
                 if is_key_pressed(KeyCode::Space) {
                     is_shot = true;
                     shooting_timer = 20;
-                    for (src, player) in &data.players {
+                    for (_, player) in &data.players {
                         if data.map.check_visibility(&me, player) {
                             sender_clone.send_message("shoot", json!(me));
                         }
