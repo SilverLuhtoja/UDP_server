@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::common::constants::BOX_SIZE;
-use crate::map::map::GameWindow;
+use crate::map::game_window::GameWindow;
 use crate::map::map::Map;
 use crate::utils::point::Point;
 use crate::utils::ray::Ray;
@@ -72,11 +72,10 @@ impl Player {
             //ceiling
             draw_rectangle(i as f32 + game_window.visual_window_start_x, game_window.visual_window_start_y, 1.0, game_window.visual_window_finish_y / 2.0 - wall_height / 2.0, WHITE);
 
-
-            if is_shot {
-                let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
-                draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0 + wall_height / 2.0, 5.0, GREEN);
-            }
+        }
+        if is_shot {
+            let x = (game_window.visual_window_start_x + game_window.visual_window_finish_x) / 2.0;
+            draw_line(x, game_window.visual_window_finish_y, x, game_window.visual_window_finish_y / 2.0, 5.0, GREEN);
         }
         //line to separate map and visual
         draw_line(game_window.visual_window_start_x, 0.0, game_window.visual_window_start_x, screen_height(), 1.0, BLACK);
