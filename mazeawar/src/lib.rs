@@ -23,8 +23,9 @@ pub mod common;
 pub mod player;
 pub mod utils;
 
-#[derive(Clone, Debug, PartialEq,Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq,Deserialize, Serialize, Default)]
 pub enum GameState{
+    #[default]
     Game,
     Killed,
     NewLevel

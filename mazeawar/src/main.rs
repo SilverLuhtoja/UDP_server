@@ -51,7 +51,7 @@ async fn main() -> std::io::Result<()> {
     loop {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
-            if data.game_state == "NewLevel"{
+            if data.game_state == GameState::NewLevel{
                 game_state = GameState::NewLevel
             }
         }
