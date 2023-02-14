@@ -1,5 +1,6 @@
 pub use std::fs::read;
 pub use macroquad::prelude::*;
+use serde::{Deserialize, Serialize};
 pub use serde_json::*;
 pub use std::net::SocketAddr;
 pub use std::process::exit;
@@ -21,3 +22,10 @@ pub mod map;
 pub mod common;
 pub mod player;
 pub mod utils;
+
+#[derive(Clone, Debug, PartialEq,Deserialize, Serialize)]
+pub enum GameState{
+    Game,
+    Killed,
+    NewLevel
+}

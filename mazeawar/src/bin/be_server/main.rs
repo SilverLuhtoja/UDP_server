@@ -1,9 +1,8 @@
-use game_logic::{is_map_change, reset_all};
-use maze::{Grid, LOW};
+use game_logic::{is_map_change, reset_all, generate_new_map};
+use mazewar::GameState;
 use serde_json::json;
 use std::collections::HashMap;
-use std::net::{SocketAddr, IpAddr, Ipv4Addr};
-use map::Map;
+use std::net::SocketAddr;
 use player::Player;
 
 mod server;
@@ -16,41 +15,14 @@ use crate::server::*;
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let server= Server::new().await;
-    // let mut grid = Grid::new(10, 10, LOW);
-    // grid.generate_maze();
-    // let map = grid.convert_to_map();
+    let mut level = 1;
+    let mut map = generate_new_map(level);
     let mut players:HashMap<SocketAddr, Player> = HashMap::new();
     
-
-    let map_1:Vec<Vec<i32>> = vec![
-    vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    ];
-
-     let map_2:Vec<Vec<i32>> = vec![
-    vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1],
-    vec![1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    ];
-    let mut map = Map::new_from_arr(map_1);
-    let decoy:Player = Player::new(map.get_spawn().await, String::from("Miki")) ;
-    let decoy_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192, 168, 8, 102)), 0);
-    players.insert(decoy_addr,decoy);
-
-
     let mut message = BroadcastMessage{
                 map: json!(map),
                 players : players.clone(),
-                game_state: String::from("GAME")
+                game_state: GameState::Game
             };
     
     loop {
@@ -66,7 +38,7 @@ async fn main() -> std::io::Result<()> {
         }
 
         if data.message_type == "game on" {
-            message.game_state = String::from("GAME")
+            message.game_state = GameState::Game
         }
 
         if data.message_type == "movement" {
@@ -82,6 +54,7 @@ async fn main() -> std::io::Result<()> {
                 if &src != addr && shooter.is_target_aligned(&player) {
                         if shooter.is_hit(&player, &map) && player.alive{
                             let target =  cloned.get_mut(&addr).expect("ADD PLAYER < NOT IN HASH >");
+                            target.location = map.get_spawn().await;
                             target.alive = false;
                             let shooter = cloned.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
                             shooter.score += 1;
@@ -99,18 +72,16 @@ async fn main() -> std::io::Result<()> {
         }
         
         if is_map_change(&players){
-            let new_map = Map::new_from_arr(map_2.to_owned());
-            message.map = json!(new_map);
-            reset_all(&mut players, &new_map).await;
-            message.game_state = String::from("NEW LEVEL")
+            level += 1;
+            map = generate_new_map(level);
+            message.map = json!(map);
+            message.game_state = GameState::NewLevel;
+            reset_all(&mut players, &map).await;
         }
 
         message.players = players.clone();
         for (addr,_) in &players{
-            if addr != &decoy_addr{
-                server.send_message(&message, addr).await
-            }
-            // server.send_message(&message, addr).await
+            server.send_message(&message, addr).await
         }
     }
 }

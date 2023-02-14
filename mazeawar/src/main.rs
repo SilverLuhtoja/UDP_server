@@ -10,13 +10,6 @@ fn window_conf() -> Conf {
     }
 }
 
-pub enum GameState{
-    Game,
-    Killed,
-    NewLevel
-}
-
-
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
     let mut game_state:GameState = GameState::Game;
@@ -58,7 +51,7 @@ async fn main() -> std::io::Result<()> {
     loop {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
-            if data.game_state == "NEW LEVEL"{
+            if data.game_state == "NewLevel"{
                 game_state = GameState::NewLevel
             }
         }

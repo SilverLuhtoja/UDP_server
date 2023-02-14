@@ -1,7 +1,7 @@
 use mazewar::SocketAddr;
 use std::collections::HashMap;
 
-use crate::{player::Player, map::Map};
+use crate::{player::Player, map::Map, maze::{LOW, Grid, HIGH, MEDIUM}};
 
 pub fn is_map_change(players: &HashMap<SocketAddr, Player>) -> bool{
     for player in players.values(){
@@ -17,6 +17,21 @@ pub async fn reset_all(players: &mut HashMap<SocketAddr, Player>,map: &Map){
        let mut player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
        player.location = map.get_spawn().await;
        player.score = 0;
-       // player.alive = true;
+       player.alive = true;
     }
+}
+
+pub fn generate_new_map(level: i32) -> Map{
+    let difficulty = set_map_diffculty(level);
+    let mut grid = Grid::new(10, 10, difficulty);
+    grid.generate_maze();
+    grid.convert_to_map()
+}
+
+fn set_map_diffculty(val: i32) -> i32{
+    return match val{
+        1 => LOW,
+        2 => MEDIUM,
+        _ => HIGH
+    };
 }
