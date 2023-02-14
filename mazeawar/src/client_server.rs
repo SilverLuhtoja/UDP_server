@@ -2,18 +2,19 @@ use std::{net::{SocketAddr, UdpSocket, SocketAddrV4, Ipv4Addr}, collections::Has
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use serde_json::*;
-use crate::{map::map::Map, player::player::Player, common::constants::BUFFER};
+use crate::{map::map::Map, player::player::Player, common::constants::BUFFER, GameState};
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Message {
-     message_type: String,
-     data: JsonValue,
+    message_type: String,
+    data: JsonValue,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, Default)]
 pub struct Data{
     pub map: Map,
     pub players: HashMap<SocketAddr, Player>,
+    pub game_state: GameState
 }
 
 #[derive(Debug)]

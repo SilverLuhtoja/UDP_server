@@ -5,7 +5,7 @@ use local_ip_address::local_ip;
 use tokio::net::UdpSocket;
 use std::{net::SocketAddr, collections::HashMap};
 
-use mazewar::common::constants::BUFFER;
+use mazewar::{common::constants::BUFFER, GameState};
 
 use crate::player::Player;
 
@@ -20,7 +20,8 @@ pub struct Data{
 #[derive(Clone, Debug, PartialEq,Deserialize, Serialize)]
 pub struct BroadcastMessage{
    pub map: JsonValue,
-   pub players : HashMap<SocketAddr, Player>
+   pub players : HashMap<SocketAddr, Player>,
+   pub game_state: GameState
 }
 
 #[derive(Debug)]
