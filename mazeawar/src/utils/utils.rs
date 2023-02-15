@@ -11,7 +11,6 @@ pub mod convert {
 
 pub mod client_input {
     use regex::Regex;
-    use crate::miniquad::log;
 
     pub enum InputType {
         Ip,
