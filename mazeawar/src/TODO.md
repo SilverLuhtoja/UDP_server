@@ -1,5 +1,6 @@
 FRONT:
-- dead screen -> NEED SOME DATA FROM BACK
+- sort names in scoreboard ?
+- enemy in the corridor?
 
 BACK: 
 1. ~~put name when connecting~~ 

@@ -16,19 +16,19 @@ async fn main() -> std::io::Result<()> {
     //option for prod
     //add user input for server ip and user name
 
-    // let input_ip = read_input("Enter IP address: ".to_string(), InputType::Ip);
+    let input_ip = read_input("Enter IP address: ".to_string(), InputType::Ip);
     // println!("A {}", input_ip.to_string());
-    // let server_addr = to_ip(input_ip);
-    // let user_name = read_input("Enter Name:  ".to_string(), InputType::Name);
+    let server_addr = to_ip(input_ip);
+    let user_name = read_input("Enter Name:  ".to_string(), InputType::Name);
     
     
     //option for tests
     //to test this has to be changed to local ip address
     // let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
 
-    let my_local_ip = local_ip().unwrap();
-    let server_addr: SocketAddr = SocketAddr::new(my_local_ip, 4242);
-    let user_name = String::from("SILVER");
+    // let my_local_ip = local_ip().unwrap();
+    // let server_addr: SocketAddr = SocketAddr::new(my_local_ip, 4242);
+    // let user_name = String::from("SILVER");
 
     let client = Client::new(server_addr);
     let sender_clone = Arc::new(client);
@@ -47,6 +47,8 @@ async fn main() -> std::io::Result<()> {
     let mut data = Data::default();
     let mut is_shot = false;
     let mut shooting_timer = 0;
+    let mut kill_timer = 0.0;
+    let mut new_level_timer = 0.0;
     // Current display updates based on events, should be from back
     loop {
         if let Ok(received_data) = rx.try_recv() {
@@ -58,17 +60,22 @@ async fn main() -> std::io::Result<()> {
         clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
         match game_state {
             GameState::Killed =>  {
-                draw_text("YOU ARE KILLED AND STARTING OVER IN NEW POSITION:", 100.0, 200.0, 50.0, WHITE);
-                if is_key_pressed(KeyCode::Escape){
-                    sender_clone.send_message("revive", json!(""));
+                if kill_timer > 1.0 {
                     game_state = GameState::Game;
+                    sender_clone.send_message("revive", json!(""));
+                    kill_timer = 0.0;
+                } else {
+                    draw_text("YOU ARE KILLED AND STARTING OVER IN NEW POSITION:", 100.0, 200.0, 50.0, WHITE);
+                    kill_timer += get_frame_time();
                 }
             },
             GameState::NewLevel => {
-                draw_text("NEW LEVEL IS READY", 100.0, 200.0, 50.0, WHITE);
-                if is_key_pressed(KeyCode::Escape){
-                    sender_clone.send_message("game on", json!(""));
-                    game_state = GameState::Game
+                if new_level_timer > 2.0 {
+                    game_state = GameState::Game;
+                    new_level_timer = 0.0;
+                } else {
+                    draw_text("NEW LEVEL IS READY", 100.0, 200.0, 50.0, WHITE);
+                    new_level_timer += get_frame_time();
                 }
             },
             GameState::Game => {
@@ -76,7 +83,7 @@ async fn main() -> std::io::Result<()> {
                 let mut me = Player::new(zero_point);
                 let mut enemy_positions: Vec<Point> = vec![];
 
-                //FIRST FOUND ME IN THE LIST to settle the position
+                //FIRST FOUND ME IN THE LIST to settle the position and draw "me" and the "camera"
                 for (src, player) in &data.players {
                     if src.to_string() == sender_clone.get_address().to_string() {
                         me = player.clone();
@@ -100,7 +107,7 @@ async fn main() -> std::io::Result<()> {
                 if shooting_timer <= 0 {
                     is_shot = false;
                 } else{
-                    me.shoot(&data.map.0);
+                    // me.shoot(&data.map.0);
                     shooting_timer -= 1;
                 }
                 if is_key_pressed(KeyCode::Space) {

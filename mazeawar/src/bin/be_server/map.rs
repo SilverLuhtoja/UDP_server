@@ -12,10 +12,6 @@ impl Map {
         Self(vec![vec![FLOOR; width]; height])
     }
 
-    pub fn new_from_arr(map: Vec<Vec<i32>>) -> Self{
-        Self(map)
-    }
-
     pub fn width(&self) -> usize {
         self.0[0].len()
     }

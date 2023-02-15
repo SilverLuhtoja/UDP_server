@@ -159,28 +159,6 @@ impl Grid {
         }
     }
 
-    fn adjust_difficulty_level(&mut self) {
-        //count number of walls that has to be deleted
-        let mut has_to_remove = self.walls * self.difficulty / 100;
-
-        while has_to_remove != 0 {
-            let random_index = thread_rng().gen_range(0..self.cells.len());
-            self.current = random_index;
-            let next = self.find_next_cell(true);
-
-            if let Some(next) = next {
-                let (lower_part, higher_part) =
-                    self.cells.split_at_mut(std::cmp::max(self.current, next));
-                let cell1 = &mut lower_part[std::cmp::min(self.current, next)];
-                let cell2 = &mut higher_part[0];
-                if cell1.remove_wall(cell2) == 1 {
-                    self.walls = self.walls - 1;
-                    has_to_remove = has_to_remove - 1;
-                }
-            }
-        }
-    }
-
     //converts array of cells to matrix
     pub fn convert_to_map(&self) -> Map {
         let mut map = Map::new((self.width * 2 + 1) as usize, (self.height * 2 + 1) as usize);
@@ -212,26 +190,5 @@ impl Grid {
         let walls_to_remove = self.walls * self.difficulty / 100;
         map.remove_walls(walls_to_remove);
         return map;
-    }
-
-    pub fn draw(&self) {
-        let size: f32 = 10.0;
-        let offset: f32 = 100.0;
-        for ind in 0..self.cells.len() {
-            let row = self.cells[ind].row as f32;
-            let col = self.cells[ind].col as f32;
-            if self.cells[ind].walls[TOP] {
-                draw_line(col * size + offset, row * size + offset, (col + 1.0) * size + offset, row * size + offset, 1.0, WHITE);
-            }
-            if self.cells[ind].walls[RIGHT] {
-                draw_line((col + 1.0) * size + offset, row * size + offset, (col + 1.0) * size + offset, (row + 1.0) * size + offset, 1.0, WHITE);
-            }
-            if self.cells[ind].walls[BOTTOM] {
-                draw_line(col * size + offset, (row + 1.0) * size + offset, (col + 1.0) * size + offset, (row + 1.0) * size + offset, 1.0, WHITE);
-            }
-            if self.cells[ind].walls[LEFT] {
-                draw_line(col * size + offset, row * size + offset, col * size + offset, (row + 1.0) * size + offset, 1.0, WHITE);
-            }
-        }
     }
 }
