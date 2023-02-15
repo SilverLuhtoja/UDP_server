@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
     let (tx, rx) = channel::<Data>();
 
     thread::spawn(move || {
-        receiver_clone.send_message("connect", json!(user_name));
+        receiver_clone.send_data("connect", json!(user_name));
         loop {
             let received_data = receiver_clone.read_message();
             tx.send(received_data).unwrap()
@@ -60,14 +60,14 @@ async fn main() -> std::io::Result<()> {
             GameState::Killed =>  {
                 draw_text("YOU ARE KILLED AND STARTING OVER IN NEW POSITION:", 100.0, 200.0, 50.0, WHITE);
                 if is_key_pressed(KeyCode::Escape){
-                    sender_clone.send_message("revive", json!(""));
+                    sender_clone.send_action("revive");
                     game_state = GameState::Game;
                 }
             },
             GameState::NewLevel => {
                 draw_text("NEW LEVEL IS READY", 100.0, 200.0, 50.0, WHITE);
                 if is_key_pressed(KeyCode::Escape){
-                    sender_clone.send_message("game on", json!(""));
+                    sender_clone.send_action("game on");
                     game_state = GameState::Game
                 }
             },
@@ -108,13 +108,13 @@ async fn main() -> std::io::Result<()> {
                     shooting_timer = 20;
                     for (_, player) in &data.players {
                         if data.map.check_visibility(&me, player) {
-                            sender_clone.send_message("shoot", json!(me));
+                            sender_clone.send_data("shoot", json!(me));
                         }
                     }
                 }
                 listen_move_events(&sender_clone, me, &data.map, &enemy_positions);
                 if is_key_pressed(KeyCode::Escape) {
-                    sender_clone.send_message("I QUIT", json!(""));
+                    sender_clone.send_action("QUIT");
                     exit(1)
                 }
                 draw_text(&format!("FPS: {}", get_fps()), screen_width() - 200.0, 30.0, 25.0, BLACK);
@@ -141,6 +141,6 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: &Map, enemy_posi
         me.make_move(step, map, enemy_positions);
     }
     if me_before_move != me {
-        client.send_message("movement", json!(me))
+        client.send_data("movement", json!(me))
     }
 }
