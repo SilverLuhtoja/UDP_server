@@ -25,3 +25,13 @@ players.insert(decoy_addr,decoy);
 if addr != &decoy_addr{
     server.send_message(&message, addr).await
 }
+
+
+// pub async  fn read_message(&self) -> (Data, SocketAddr) {
+//     let mut buf = [0; BUFFER];
+//     let (amt, _src) = self.socket.recv_from(&mut buf).await.expect("ERROR<read>: failed to receive message failed");
+//     let incoming_message = String::from_utf8_lossy(&buf[..amt]).into_owned();
+//     let data: Data = serde_json::from_str(&incoming_message).expect("ERROR<read>: couldn't parse message");
+//     println!("Received message from <{}>: {:?}", _src, data.message_type);
+//     return (data, _src)
+// }

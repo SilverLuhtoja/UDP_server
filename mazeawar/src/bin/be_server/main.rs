@@ -1,4 +1,4 @@
-use game_logic::{generate_new_map, is_map_change, reset_all};
+use game_logic::{generate_new_map, is_map_change, reset_all, zero_all_hearts};
 use mazewar::GameState;
 use player::Player;
 use serde_json::json;
@@ -18,6 +18,7 @@ async fn main() -> std::io::Result<()> {
     let mut level = 1;
     let mut map = generate_new_map(level);
     let mut players: HashMap<SocketAddr, Player> = HashMap::new();
+    let mut player_heartbeats: HashMap<SocketAddr, usize> = HashMap::new();
 
     let mut message = BroadcastMessage {
         map: json!(map),
@@ -26,13 +27,14 @@ async fn main() -> std::io::Result<()> {
     };
 
     loop {
-        let (data, src) = server.read_message().await;
-
+        let (data, src) = server.read_message().await.unwrap();
+        
         if data.message_type == "connect" {
             let spawn = map.get_spawn().await;
             let username = &data.data;
             let player = Player::new(spawn, username.to_string());
             players.insert(src, player);
+            zero_all_hearts(&mut player_heartbeats)
         }
 
         if data.message_type == "game on" {
@@ -66,6 +68,32 @@ async fn main() -> std::io::Result<()> {
             let mut current_player = players.get_mut(&src).expect("ADD PLAYER < NOT IN HASH >");
             current_player.alive = true;
             current_player.location = map.get_spawn().await;
+        }
+        
+        if data.message_type == "game on" {
+            message.game_state = GameState::Game
+        }
+
+        if data.message_type == "QUIT" {
+            players.remove(&src);
+        }
+
+        if data.message_type == "beat" {
+            *player_heartbeats.entry(src).or_insert(0) += 1;
+            let mut addresses:Vec<SocketAddr> =vec![]; 
+            if player_heartbeats.values().any(|&heartbeat| heartbeat >= 5) {
+                for (src, beats) in player_heartbeats.iter_mut(){
+                    if *beats <= 3 {
+                        addresses.push(*src);
+                    }
+                    *beats = 0;
+                }
+            }
+
+            for src in addresses{
+                players.remove(&src);
+                player_heartbeats.remove(&src);
+            }
         }
 
         if is_map_change(&players) {
