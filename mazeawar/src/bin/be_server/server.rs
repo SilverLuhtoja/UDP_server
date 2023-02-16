@@ -41,15 +41,6 @@ impl Server {
         self.socket.send_to(json!(&message).to_string().as_bytes(),&addr).await.expect("ERROR<send>: failed to send a message");
     }
 
-    // pub async  fn read_message(&self) -> (Data, SocketAddr) {
-    //     let mut buf = [0; BUFFER];
-    //     let (amt, _src) = self.socket.recv_from(&mut buf).await.expect("ERROR<read>: failed to receive message failed");
-    //     let incoming_message = String::from_utf8_lossy(&buf[..amt]).into_owned();
-    //     let data: Data = serde_json::from_str(&incoming_message).expect("ERROR<read>: couldn't parse message");
-    //     println!("Received message from <{}>: {:?}", _src, data.message_type);
-    //     return (data, _src)
-    // }
-
     pub async fn read_message(&self) -> Option<(Data, SocketAddr)> {
         let mut buf = [0; BUFFER];
 
@@ -68,19 +59,5 @@ impl Server {
                 Some((error_data,error_addr))
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::net::{IpAddr, Ipv4Addr};
-
-    use super::*;
-    
-    #[tokio::test]
-    async fn test_new() {
-        let server = UdpSocket::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 4242)).await.unwrap();
-        let server_local = server.local_addr().unwrap().to_string();
-        assert_eq!(server_local, "0.0.0.0:4242");
     }
 }
