@@ -31,22 +31,22 @@ async fn main() -> std::io::Result<()> {
     let user_name = String::from("SILVER");
 
     let client = Client::new(server_addr);
-    let transmitter = Arc::new(client);
-    let receiver = transmitter.clone();
-    let heartbeat_sender = transmitter.clone();
+    let sender_client = Arc::new(client);
+    let receiver_client = sender_client.clone();
+    let heartbeat_client = sender_client.clone();
     let (tx, rx) = channel::<Data>();
 
     thread::spawn(move || {
-        receiver.send_data("connect", json!(user_name));
+        receiver_client.send_data("connect", json!(user_name));
         loop {
-            let received_data = receiver.read_message();
+            let received_data = receiver_client.read_message();
             tx.send(received_data).unwrap()
         }
     });
 
     thread::spawn( move || {
         loop {
-            heartbeat_sender.send_heartbeat();
+            heartbeat_client.send_heartbeat();
         }
     });
     
@@ -68,14 +68,14 @@ async fn main() -> std::io::Result<()> {
             GameState::Killed =>  {
                 draw_text("YOU ARE KILLED AND STARTING OVER IN NEW POSITION:", 100.0, 200.0, 50.0, WHITE);
                 if is_key_pressed(KeyCode::Escape){
-                    transmitter.send_action("revive");
+                    sender_client.send_action("revive");
                     game_state = GameState::Game;
                 }
             },
             GameState::NewLevel => {
                 draw_text("NEW LEVEL IS READY", 100.0, 200.0, 50.0, WHITE);
                 if is_key_pressed(KeyCode::Escape){
-                    transmitter.send_action("game on");
+                    sender_client.send_action("game on");
                     game_state = GameState::Game
                 }
             },
@@ -87,7 +87,7 @@ async fn main() -> std::io::Result<()> {
 
                 //FIRST FOUND ME IN THE LIST to settle the position
                 for (src, player) in &data.players {
-                    if src.to_string() == transmitter.get_address().to_string() {
+                    if src.to_string() == sender_client.get_address().to_string() {
                         me = player.clone();
                         me.draw(&game_window, &data.map, is_shot);
                     }
@@ -98,7 +98,7 @@ async fn main() -> std::io::Result<()> {
                 }
                 // THEN DRAW ONLY THE ENEMIES
                 for (src, player) in &data.players {
-                    if src.to_string() != transmitter.get_address().to_string() {
+                    if src.to_string() != sender_client.get_address().to_string() {
                         let visible: bool = player.alive && data.map.check_visibility(&me, &player); 
                         me.draw_enemy(player.clone(), &game_window, visible);
                         enemy_positions.push(player.location);
@@ -117,13 +117,13 @@ async fn main() -> std::io::Result<()> {
                     shooting_timer = 20;
                     for (_, player) in &data.players {
                         if data.map.check_visibility(&me, player) {
-                            transmitter.send_data("shoot", json!(me));
+                            sender_client.send_data("shoot", json!(me));
                         }
                     }
                 }
-                listen_move_events(&transmitter, me, &data.map, &enemy_positions);
+                listen_move_events(&sender_client, me, &data.map, &enemy_positions);
                 if is_key_pressed(KeyCode::Escape) {
-                    transmitter.send_action("QUIT");
+                    sender_client.send_action("QUIT");
                     exit(1)
                 }
                 draw_text(&format!("FPS: {}", get_fps()), screen_width() - 200.0, 30.0, 25.0, BLACK);
