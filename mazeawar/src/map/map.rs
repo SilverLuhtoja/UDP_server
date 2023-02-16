@@ -62,14 +62,26 @@ impl Map {
         return game_window;
     }
 
-    pub fn is_wall(&self, row: f32, column: f32) -> bool{
+    pub fn is_wall(&self, row: i32, column: i32) -> bool{
         self.0[row as usize][column as usize] == 1
     }
 
 
     pub fn check_visibility(&self, player1: &Player, player2: &Player) -> bool {
-        let mut pl1 = (player1.location.x / BOX_SIZE, player1.location.y / BOX_SIZE);
-        let pl2 = (player2.location.x / BOX_SIZE, player2.location.y / BOX_SIZE);
+        let mut pl1 = player1.get_tiles();
+        let pl2 = player2.get_tiles();
+        let difference = looking_direction_calculation_difference(player1.looking_at);
+        while pl1 != pl2{
+            if self.is_wall(pl1.1, pl1.0){
+                return false
+            }
+            pl1 = add_difference(pl1, difference)
+        }
+        true
+    }
+    pub fn check_visibility1(&self, player1: &Player, player2: &Player) -> bool {
+        let mut pl1 = player1.get_tiles();
+        let pl2 = player2.get_tiles();
         let difference = looking_direction_calculation_difference(player1.looking_at);
         while pl1 != pl2{
             if self.is_wall(pl1.1, pl1.0){
@@ -81,15 +93,15 @@ impl Map {
     }
 }
 
-pub fn looking_direction_calculation_difference(face_dir: Direction) -> (f32,f32){
+pub fn looking_direction_calculation_difference(face_dir: Direction) -> (i32,i32){
     match face_dir{
-        Direction::UP => {(0.0,-1.0)},
-        Direction::DOWN => {(0.0,1.0)},
-        Direction::LEFT => {(-1.0,0.0)},
-        Direction::RIGHT => {(1.0,0.0)},
+        Direction::UP => {(0,-1)},
+        Direction::DOWN => {(0,1)},
+        Direction::LEFT => {(-1,0)},
+        Direction::RIGHT => {(1,0)},
     }
 }
 
-pub fn add_difference(x:(f32,f32), y:(f32,f32)) -> (f32,f32){
+pub fn add_difference(x:(i32,i32), y:(i32,i32)) -> (i32,i32){
     (x.0+y.0,x.1+y.1)
 }

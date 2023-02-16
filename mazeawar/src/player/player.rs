@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
+use math::round;
 
 use crate::common::constants::BOX_SIZE;
 use crate::map::game_window::GameWindow;
@@ -54,12 +55,12 @@ impl Player {
         // Draw rays from player on minimap and visual part
         for (i, ray) in self.get_rays(game_window.visual_window_start_x, map).iter().enumerate() {
             //on minimap
-            let start_x: f32 = self.location.x + BOX_SIZE / 2.0;
-            let start_y: f32 = self.location.y + BOX_SIZE / 2.0;
-            let player_angle: f32 = looking_direction_to_radians(self.looking_at);
-            draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
+            // let start_x: f32 = self.location.x + BOX_SIZE / 2.0;
+            // let start_y: f32 = self.location.y + BOX_SIZE / 2.0;
+            // draw_line(start_x, start_y, start_x + ray.angle.cos() * ray.distance, start_y + ray.angle.sin() * ray.distance, 1.0, BEIGE);
 
             //visual part:
+            let player_angle: f32 = looking_direction_to_radians(self.looking_at);
             let distance = fix_fish_eye(ray.distance, ray.angle, player_angle);
             let wall_height = ((BOX_SIZE * 5.0) / distance) * 150.0;
 
@@ -103,9 +104,16 @@ impl Player {
     
             let (width_center,height_center) = screen.get_visual_screen_center_point();
     
-            let screen_sx = (a*108.0 * 4.0/b) + width_center;
+            let screen_sx = (a*108.0 * 7.0/b) + width_center;
             let screen_sy = (1.0/b) +  height_center;
-            draw_circle(screen_sx, screen_sy, (BOX_SIZE/distance) * 100.0, RED);
+            let radius = (BOX_SIZE/distance) * 400.0;
+            draw_circle(screen_sx, screen_sy, radius, RED);
+            if enemy_is_looking_at_me (self, &enemy){
+                draw_circle(screen_sx - radius/4.0, screen_sy, radius/5.0, BLACK);
+                draw_circle(screen_sx - radius/4.0, screen_sy, radius/20.0, WHITE);
+                draw_circle(screen_sx + radius/4.0, screen_sy, radius/5.0, BLACK);
+                draw_circle(screen_sx + radius/4.0, screen_sy, radius/20.0, WHITE);
+            }
         }
     }
 
@@ -134,6 +142,22 @@ impl Player {
             i += 1;
         }
         return result;
+    }
+
+    pub fn get_tiles(&self) -> (i32, i32) {
+        return (
+            round::floor((self.location.x / BOX_SIZE) as f64, 0) as i32,
+            round::floor((self.location.y / BOX_SIZE) as f64, 0) as i32,
+        );
+    }
+}
+
+pub fn enemy_is_looking_at_me(me: &Player, enemy: &Player) -> bool {
+    match me.looking_at {
+        Direction::UP => enemy.looking_at == Direction::DOWN,
+        Direction::LEFT => enemy.looking_at == Direction::RIGHT,
+        Direction::DOWN => enemy.looking_at == Direction::UP,
+        Direction::RIGHT => enemy.looking_at == Direction::LEFT,
     }
 }
 

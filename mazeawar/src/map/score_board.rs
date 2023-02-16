@@ -32,6 +32,7 @@ impl ScoreBoard{
         }
     }
     pub fn draw(&self) {
+        //background
         draw_rectangle(
             self.start_x,
             self.start_y,
@@ -40,10 +41,12 @@ impl ScoreBoard{
             GRAY,
         );
         let mut y_addition = BOX_SIZE;
+        //name and score
         for player in &self.players {
-            draw_text(&player.username.clone(), self.start_x + BOX_SIZE, self.start_y + y_addition, BOX_SIZE, BLACK); //name
+            draw_text(&player.username.clone().to_string(), self.start_x + BOX_SIZE, self.start_y + y_addition, BOX_SIZE, BLACK); //name
             draw_text(&player.score.to_string(), self.start_x + BOX_SIZE * 10.0, self.start_y + y_addition, BOX_SIZE, BLACK); //score
             y_addition += BOX_SIZE;
         }
     }
 }
+
