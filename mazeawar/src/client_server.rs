@@ -1,4 +1,4 @@
-use std::{net::{SocketAddr, UdpSocket, SocketAddrV4, Ipv4Addr}, collections::HashMap};
+use std::{net::{SocketAddr, UdpSocket, SocketAddrV4, Ipv4Addr}, collections::HashMap, time::Duration, thread};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use serde_json::*;
@@ -29,10 +29,27 @@ impl Client {
         Self {socket}
     } 
 
-    pub fn send_message(&self, action: &str,  data: JsonValue){
+    pub fn send_data(&self, action: &str,  data: JsonValue){
         let message = Message {
             message_type : action.to_string(),
             data,
+        };
+        self.socket.send(json!(&message).to_string().as_bytes()).expect("ERROR<send>: failed to send a message");
+    }
+
+    pub fn send_action(&self, action: &str){
+        let message = Message {
+            message_type : action.to_string(),
+            data: json!(""),
+        };
+        self.socket.send(json!(&message).to_string().as_bytes()).expect("ERROR<send>: failed to send a message");
+    }
+
+    pub fn send_heartbeat(&self){
+        thread::sleep(Duration::from_millis(100));
+        let message = Message {
+            message_type : String::from("beat"),
+            data: json!(""),
         };
         self.socket.send(json!(&message).to_string().as_bytes()).expect("ERROR<send>: failed to send a message");
     }

@@ -15,6 +15,7 @@ pub use map::game_window::GameWindow;
 pub use player::{player::*, movement::reverse_difference};
 pub use utils::utils::{client_input::read_input, convert::to_ip, client_input::InputType};
 pub use utils::point::Point;
+pub use tokio::time::sleep;
 pub use crate::client_server::*;
 
 pub mod client_server;

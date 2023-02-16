@@ -31,15 +31,22 @@ async fn main() -> std::io::Result<()> {
     // let user_name = String::from("SILVER");
 
     let client = Client::new(server_addr);
-    let sender_clone = Arc::new(client);
-    let receiver_clone = sender_clone.clone();
+    let sender_client = Arc::new(client);
+    let receiver_client = sender_client.clone();
+    let heartbeat_client = sender_client.clone();
     let (tx, rx) = channel::<Data>();
 
     thread::spawn(move || {
-        receiver_clone.send_message("connect", json!(user_name));
+        receiver_client.send_data("connect", json!(user_name));
         loop {
-            let received_data = receiver_clone.read_message();
+            let received_data = receiver_client.read_message();
             tx.send(received_data).unwrap()
+        }
+    });
+
+    thread::spawn( move || {
+        loop {
+            heartbeat_client.send_heartbeat();
         }
     });
     
@@ -57,6 +64,7 @@ async fn main() -> std::io::Result<()> {
                 game_state = GameState::NewLevel
             }
         }
+
         clear_background(Color::new(0.0, 0.0, 0.0, 0.8));
         match game_state {
             GameState::Killed =>  {
@@ -79,13 +87,14 @@ async fn main() -> std::io::Result<()> {
                 }
             },
             GameState::Game => {
+               
                 let game_window: GameWindow = data.map.draw(&data.players);
                 let mut me = Player::new(zero_point);
                 let mut enemy_positions: Vec<Point> = vec![];
 
                 //FIRST FOUND ME IN THE LIST to settle the position and draw "me" and the "camera"
                 for (src, player) in &data.players {
-                    if src.to_string() == sender_clone.get_address().to_string() {
+                    if src.to_string() == sender_client.get_address().to_string() {
                         me = player.clone();
                         me.draw(&game_window, &data.map, is_shot);
                     }
@@ -96,7 +105,7 @@ async fn main() -> std::io::Result<()> {
                 }
                 // THEN DRAW ONLY THE ENEMIES
                 for (src, player) in &data.players {
-                    if src.to_string() != sender_clone.get_address().to_string() {
+                    if src.to_string() != sender_client.get_address().to_string() {
                         let visible: bool = player.alive && data.map.check_visibility(&me, &player); 
                         me.draw_enemy(player.clone(), &game_window, visible);
                         enemy_positions.push(player.location);
@@ -115,13 +124,13 @@ async fn main() -> std::io::Result<()> {
                     shooting_timer = 20;
                     for (_, player) in &data.players {
                         if data.map.check_visibility(&me, player) {
-                            sender_clone.send_message("shoot", json!(me));
+                            sender_client.send_data("shoot", json!(me));
                         }
                     }
                 }
-                listen_move_events(&sender_clone, me, &data.map, &enemy_positions);
+                listen_move_events(&sender_client, me, &data.map, &enemy_positions);
                 if is_key_pressed(KeyCode::Escape) {
-                    sender_clone.send_message("I QUIT", json!(""));
+                    sender_client.send_action("QUIT");
                     exit(1)
                 }
                 draw_text(&format!("FPS: {}", get_fps()), screen_width() - 200.0, 30.0, 25.0, BLACK);
@@ -148,6 +157,6 @@ pub fn listen_move_events(client: &Client, mut me: Player, map: &Map, enemy_posi
         me.make_move(step, map, enemy_positions);
     }
     if me_before_move != me {
-        client.send_message("movement", json!(me))
+        client.send_data("movement", json!(me))
     }
 }

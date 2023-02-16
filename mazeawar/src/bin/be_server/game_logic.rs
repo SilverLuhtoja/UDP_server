@@ -3,6 +3,12 @@ use std::collections::HashMap;
 
 use crate::{map::Map,maze::{Grid, HIGH, LOW, MEDIUM},player::Player};
 
+pub fn zero_all_hearts(hearts:&mut HashMap<SocketAddr, usize>){
+    for beats in hearts.values_mut(){
+        *beats = 0;
+    }
+}
+
 pub fn is_map_change(players: &HashMap<SocketAddr, Player>) -> bool {
     for player in players.values() {
         if player.score == 3 {
