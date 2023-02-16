@@ -1,4 +1,4 @@
-use game_logic::{generate_new_map, is_map_change, reset_all, zero_all_hearts};
+use game_logic::*;
 use mazewar::GameState;
 use player::Player;
 use serde_json::json;
@@ -80,16 +80,7 @@ async fn main() -> std::io::Result<()> {
 
         if data.message_type == "beat" {
             *player_heartbeats.entry(src).or_insert(0) += 1;
-            let mut addresses:Vec<SocketAddr> =vec![]; 
-            if player_heartbeats.values().any(|&heartbeat| heartbeat >= 5) {
-                for (src, beats) in player_heartbeats.iter_mut(){
-                    if *beats <= 3 {
-                        addresses.push(*src);
-                    }
-                    *beats = 0;
-                }
-            }
-
+            let addresses:Vec<SocketAddr> = filter_bad_connections(5, &mut player_heartbeats); 
             for src in addresses{
                 players.remove(&src);
                 player_heartbeats.remove(&src);

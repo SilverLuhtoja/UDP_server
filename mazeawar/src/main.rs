@@ -12,24 +12,10 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
-    let mut game_state:GameState = GameState::Game;
-    //option for prod
-    //add user input for server ip and user name
-
     let input_ip = read_input("Enter IP address: ".to_string(), InputType::Ip);
-    // println!("A {}", input_ip.to_string());
     let server_addr = to_ip(input_ip);
     let user_name = read_input("Enter Name:  ".to_string(), InputType::Name);
     
-    
-    //option for tests
-    //to test this has to be changed to local ip address
-    // let server_addr: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192,168, 1, 174)), 4242);
-
-    // let my_local_ip = local_ip().unwrap();
-    // let server_addr: SocketAddr = SocketAddr::new(my_local_ip, 4242);
-    // let user_name = String::from("SILVER");
-
     let client = Client::new(server_addr);
     let sender_client = Arc::new(client);
     let receiver_client = sender_client.clone();
@@ -43,24 +29,24 @@ async fn main() -> std::io::Result<()> {
             tx.send(received_data).unwrap()
         }
     });
-
+    
     thread::spawn( move || {
         loop {
             heartbeat_client.send_heartbeat();
         }
     });
     
-    let zero_point = Point::zero();
+    let mut game_state:GameState = GameState::Game;
     let mut data = Data::default();
     let mut is_shot = false;
-    let mut shooting_timer = 0;
+    let mut shooting_timer = 0.0;
     let mut kill_timer = 0.0;
     let mut new_level_timer = 0.0;
-    // Current display updates based on events, should be from back
+
     loop {
         if let Ok(received_data) = rx.try_recv() {
             data = received_data;
-            if data.game_state == GameState::NewLevel{
+            if data.game_state == GameState::NewLevel {
                 game_state = GameState::NewLevel
             }
         }
@@ -70,7 +56,7 @@ async fn main() -> std::io::Result<()> {
             GameState::Killed =>  {
                 if kill_timer > 1.0 {
                     game_state = GameState::Game;
-                    sender_clone.send_message("revive", json!(""));
+                    sender_client.send_action("revive");
                     kill_timer = 0.0;
                 } else {
                     draw_text("YOU ARE KILLED AND STARTING OVER IN NEW POSITION:", 100.0, 200.0, 50.0, WHITE);
@@ -87,9 +73,8 @@ async fn main() -> std::io::Result<()> {
                 }
             },
             GameState::Game => {
-               
                 let game_window: GameWindow = data.map.draw(&data.players);
-                let mut me = Player::new(zero_point);
+                let mut me = Player::new(Point::zero());
                 let mut enemy_positions: Vec<Point> = vec![];
 
                 //FIRST FOUND ME IN THE LIST to settle the position and draw "me" and the "camera"
@@ -100,9 +85,6 @@ async fn main() -> std::io::Result<()> {
                     }
                 }
 
-                if !me.alive{
-                    game_state = GameState::Killed;
-                }
                 // THEN DRAW ONLY THE ENEMIES
                 for (src, player) in &data.players {
                     if src.to_string() != sender_client.get_address().to_string() {
@@ -111,28 +93,32 @@ async fn main() -> std::io::Result<()> {
                         enemy_positions.push(player.location);
                     }
                 }
-
-                //  IT IS UGLY FIX :D 
-                if shooting_timer <= 0 {
-                    is_shot = false;
-                } else{
-                    // me.shoot(&data.map.0);
-                    shooting_timer -= 1;
+                
+                if !me.alive {
+                    game_state = GameState::Killed;
                 }
+
+                shooting_timer -= 1.0;
+                if shooting_timer <= 0.0 {
+                    is_shot = false;
+                } 
+
                 if is_key_pressed(KeyCode::Space) {
                     is_shot = true;
-                    shooting_timer = 20;
+                    shooting_timer = 20.0;
                     for (_, player) in &data.players {
                         if data.map.check_visibility(&me, player) {
                             sender_client.send_data("shoot", json!(me));
                         }
                     }
                 }
+
                 listen_move_events(&sender_client, me, &data.map, &enemy_positions);
                 if is_key_pressed(KeyCode::Escape) {
                     sender_client.send_action("QUIT");
                     exit(1)
                 }
+
                 draw_text(&format!("FPS: {}", get_fps()), screen_width() - 200.0, 30.0, 25.0, BLACK);
             }
         }

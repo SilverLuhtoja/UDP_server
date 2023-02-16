@@ -44,8 +44,7 @@ impl Map {
             ) {
                 self.0[y][x] = FLOOR;
                 nb -= 1;
+            }
         }
     }
-}
-
 }

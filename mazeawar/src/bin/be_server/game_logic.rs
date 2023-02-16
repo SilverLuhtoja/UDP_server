@@ -9,6 +9,19 @@ pub fn zero_all_hearts(hearts:&mut HashMap<SocketAddr, usize>){
     }
 }
 
+pub fn filter_bad_connections(threshold: usize, hearts:&mut HashMap<SocketAddr, usize>) -> Vec<SocketAddr> {
+    let mut addresses:Vec<SocketAddr> = vec![]; 
+    if hearts.values().any(|&heartbeat| heartbeat >= threshold) {
+        for (src, beats) in hearts.iter_mut(){
+            if *beats <= 3 {
+                addresses.push(*src);
+            }
+            *beats = 0;
+        }
+    }
+    addresses
+}
+
 pub fn is_map_change(players: &HashMap<SocketAddr, Player>) -> bool {
     for player in players.values() {
         if player.score == 3 {

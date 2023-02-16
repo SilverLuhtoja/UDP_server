@@ -59,7 +59,6 @@ impl Client {
         let (amt, _src) = self.socket.recv_from(&mut buf).expect("ERROR<read>: failed to receive message failed");
         let filled_buf = &mut buf[..amt];
         let incoming_message = String::from_utf8_lossy(filled_buf).into_owned();
-        // println!("SERVER --> {:?}", incoming_message);
         serde_json::from_str(&incoming_message).expect("ERROR<read>: couldn't parse message")
     }
 

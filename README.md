@@ -21,5 +21,6 @@ If you want to change size of the minimap 1 box, then change BOX_SIZE in src/com
 You can play this game locally with your friends. Just start a server and share your IP address.<br>
 
 To run be_server or client_server:<br>
-- be_server --> cargo run --bin be_server
+First: cd mazewar
+- main_server --> cargo run --bin be_server (it will log your IP address)
 - client_server  --> cargo run --bin mazewar
