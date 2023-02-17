@@ -1,6 +1,6 @@
 # MAZEWARS
 
-This is own version of the game [maze wars](https://www.youtube.com/watch?v=5V5X5SbSjns).
+This is our version of the game [maze wars](https://www.youtube.com/watch?v=5V5X5SbSjns).
 
 ### Authors:
 * Valeria Kharchenko (MazeGenerator & visual)
