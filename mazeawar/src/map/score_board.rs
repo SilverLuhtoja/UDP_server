@@ -21,7 +21,7 @@ impl ScoreBoard{
             sorted.push(player);
         }
 
-        sorted.sort_by(|a, b| b.score.cmp(&a.score));
+        sorted.sort_by(|a, b| a.username.cmp(&b.username));
 
         Self{
             start_x: 0.0,
